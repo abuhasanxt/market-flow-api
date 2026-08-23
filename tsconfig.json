@@ -1,12 +1,16 @@
 {
   "compilerOptions": {
-    "module": "commonjs",                                
-    "rootDir": "./src",
+    "module": "ESNext",                                
+    // "rootDir": "./src",
     "outDir": "./dist",  
-    // "moduleResolution": "node10", 
+    "moduleResolution": "bundler", 
+    "target": "ES2023",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+     "ignoreDeprecations": "6.0"
   },
+   "include": ["src/**/*", "**/*"],
+  "exclude": ["node_modules", "dist", "generated/prisma"]
 }
