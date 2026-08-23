@@ -1,0 +1,48 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { NextFunction, Request, Response } from "express";
+import { cookiesUtils } from "../utils/cookie";
+
+import { jwtUtils } from "../utils/jwt";
+import { envVars } from "../config/env";
+import { Role } from "../../generated/prisma/enums";
+
+export const checkAuth =
+  (...authRoles: Role[]) =>
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      //access token verification
+      const accessToken = cookiesUtils.getCookie(req, "accessToken");
+
+      if (!accessToken) {
+        throw new Error("Unauthorized access! No access token provided .");
+      }
+
+      const verifiedToken = jwtUtils.verifyToken(
+        accessToken,
+        envVars.JWT_ACCESS_SECRET,
+      );
+
+      if (!verifiedToken.success) {
+        throw new Error("Unauthorized access! Invalid access token.");
+      }
+
+      if (
+        authRoles.length > 0 &&
+        !authRoles.includes(verifiedToken.data!.role as Role)
+      ) {
+        throw new Error(
+          "Forbidden access! You do not have permission to access this resource",
+        );
+      }
+
+      //  Attach user to request
+      req.user = {
+        userId: verifiedToken.data!.userId,
+        role: verifiedToken.data!.role,
+        email: verifiedToken.data!.email,
+      };
+      next();
+    } catch (error: any) {
+      next(error);
+    }
+  };
