@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { prisma } from "../../lib/prisma";
+import { tokenUtils } from "../../utils/token";
 import { UserData, UserLogin } from "./auth.interface";
 import bcrypt from "bcrypt";
 
@@ -32,36 +33,74 @@ const registerBuyer = async (payload: UserData) => {
   if (!result.email) {
     throw new Error("Failed to register buyer");
   }
+
+  const accessToken = tokenUtils.getAccessToken({
+    userId: result.id,
+    role: result.role,
+    name: result.name,
+    email: result.email,
+    emailVerified: result.emailVerified,
+  });
+
+  const refreshToken = tokenUtils.getRefreshToken({
+    userId: result.id,
+    role: result.role,
+    name: result.name,
+    email: result.email,
+    emailVerified: result.emailVerified,
+  });
   const { passwordHash: _, ...safeUser } = result;
 
-  return safeUser;
+  return {
+    ...safeUser,
+    accessToken,
+    refreshToken,
+  };
 };
 
 const loginUser = async (payload: UserLogin) => {
   const { email, password } = payload;
   const normalizedEmail = email.toLowerCase().trim();
-  const existingUser = await prisma.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: {
       email: normalizedEmail,
     },
   });
 
-  if (!existingUser) {
+  if (!user) {
     throw new Error("User Not FOund");
   }
 
-  const isPasswordMatched = await bcrypt.compare(
-    password,
-    existingUser.passwordHash,
-  );
+  const isPasswordMatched = await bcrypt.compare(password, user.passwordHash);
 
   if (!isPasswordMatched) {
     throw new Error("Invalid email or password");
   }
 
-  const { passwordHash: _, ...safeUser } = existingUser;
+  const accessToken = tokenUtils.getAccessToken({
+    userId: user.id,
+    role: user.role,
+    name: user.name,
+    email: user.email,
+    emailVerified: user.emailVerified,
+  });
+  const refreshToken = tokenUtils.getRefreshToken({
+    userId: user.id,
+    role: user.role,
+    name: user.name,
+    email: user.email,
+    emailVerified: user.emailVerified,
+  });
 
-  return safeUser;
+  const { passwordHash: _, ...safeUser } = user;
+
+  const final = {
+    ...safeUser,
+    accessToken,
+    refreshToken,
+  };
+
+  return final;
 };
 
 export const authService = {
