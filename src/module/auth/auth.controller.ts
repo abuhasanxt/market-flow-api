@@ -16,7 +16,19 @@ const registerBuyer = catchAsync(async(req:Request,res:Response)=>{
   })
 })
 
+const loginUser = catchAsync(async(req:Request,res:Response)=>{
+  const result =await authService.loginUser(req.body)
+  sendResponse(res,{
+    success:true,
+    httpStatusCode:status.OK,
+    message:"User Login successfully",
+    data:result
+
+  })
+})
+
 
 export const authController={
-    registerBuyer
+    registerBuyer,
+    loginUser
 }
