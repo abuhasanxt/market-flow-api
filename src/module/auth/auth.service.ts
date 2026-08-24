@@ -103,7 +103,21 @@ const loginUser = async (payload: UserLogin) => {
   return final;
 };
 
+const getMe=async(userId:string)=>{
+  const result=await prisma.user.findUnique({
+    where:{
+      id:userId
+    }
+  })
+  if (!result) {
+    throw new Error("User not found");
+  }
+  const { passwordHash: _, ...safeUser } = result;
+  return safeUser
+}
+
 export const authService = {
   registerBuyer,
   loginUser,
+  getMe
 };

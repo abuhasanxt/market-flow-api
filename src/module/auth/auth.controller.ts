@@ -43,7 +43,23 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getMe=catchAsync(async(req:Request,res:Response)=>{
+  const userId=req.user.userId
+  if (!userId) {
+    throw new Error("You are unauthorized")
+  }
+
+  const result=await authService.getMe(userId)
+
+  sendResponse(res,{
+    success:true,
+    httpStatusCode:status.OK,
+    message:"Get my profile",
+    data:result
+  })
+})
 export const authController = {
   registerBuyer,
   loginUser,
+  getMe
 };
