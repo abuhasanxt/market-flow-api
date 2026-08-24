@@ -7,7 +7,8 @@ model User {
   role          Role    @default(BUYER)
   image         String?
 
-  vendor Vendor?
+  vendor     Vendor?
+  categories Category[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
