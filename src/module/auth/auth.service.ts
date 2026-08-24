@@ -35,38 +35,34 @@ const registerBuyer = async (payload: UserData) => {
     },
   });
   if (!result.email) {
-    throw new AppError(status.BAD_REQUEST,"Failed to register buyer");
+    throw new AppError(status.BAD_REQUEST, "Failed to register buyer");
   }
 
- 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-   //  OTP expiry - 2 minutes
-  const expiresAt = new Date(
-    Date.now() + 2 * 60 * 1000,
-  );
-
+  //  OTP expiry - 2 minutes
+  const expiresAt = new Date(Date.now() + 2 * 60 * 1000);
 
   //save otp
   await prisma.emailVerification.create({
-    data:{
-      email:normalizedEmail,
+    data: {
+      email: normalizedEmail,
       otp,
-      expiresAt
-    }
-  })
+      expiresAt,
+    },
+  });
   //send otp
   await sendEmail({
-    to:normalizedEmail,
-    subject:"Verify your email",
-    templateName:"OTP",
-    templateData:{
-      user:result.name,
-      otp
-    }
-  })
+    to: normalizedEmail,
+    subject: "Verify your email",
+    templateName: "OTP",
+    templateData: {
+      user: result.name,
+      otp,
+    },
+  });
   const { passwordHash: _, ...safeUser } = result;
 
-  return safeUser
+  return safeUser;
 };
 
 const loginUser = async (payload: UserLogin) => {
@@ -79,13 +75,46 @@ const loginUser = async (payload: UserLogin) => {
   });
 
   if (!user) {
-    throw new AppError(status.NOT_FOUND,"User Not FOund");
+    throw new AppError(status.NOT_FOUND, "User Not FOund");
   }
 
   const isPasswordMatched = await bcrypt.compare(password, user.passwordHash);
 
   if (!isPasswordMatched) {
-    throw new AppError(status.BAD_REQUEST,"Invalid email or password");
+    throw new AppError(status.BAD_REQUEST, "Invalid email or password");
+  }
+
+  //check email verification
+  if (!user.emailVerified) {
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    //otp expiry
+    const expiresAt = new Date(Date.now() + 2 * 60 * 1000);
+
+    //save otp
+    await prisma.emailVerification.create({
+      data: {
+        email: normalizedEmail,
+        otp,
+        expiresAt,
+      },
+    });
+
+    //send otp
+    await sendEmail({
+      to: normalizedEmail,
+      subject: "Verify Your Email",
+      templateName: "OTP",
+      templateData: {
+        user: user.name,
+        otp,
+      },
+    });
+
+    throw new AppError(
+      status.FORBIDDEN,
+      "Please verify your email. A verification OTP has been sent to your email.",
+    );
   }
 
   const accessToken = tokenUtils.getAccessToken({
@@ -103,97 +132,73 @@ const loginUser = async (payload: UserLogin) => {
     emailVerified: user.emailVerified,
   });
 
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-  await sendEmail({
-    to:normalizedEmail,
-    subject:"Verify your email",
-    templateName:"OTP",
-    templateData:{
-      user:user.name,
-      otp
-    }
-  })
-
   const { passwordHash: _, ...safeUser } = user;
-
-  const final = {
+  return {
     ...safeUser,
     accessToken,
     refreshToken,
   };
-
-  return final;
 };
 
-const getMe=async(userId:string)=>{
-  const result=await prisma.user.findUnique({
-    where:{
-      id:userId
-    }
-  })
+const getMe = async (userId: string) => {
+  const result = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+  });
   if (!result) {
-    throw new AppError(status.NOT_FOUND,"User not found");
+    throw new AppError(status.NOT_FOUND, "User not found");
   }
   const { passwordHash: _, ...safeUser } = result;
-  return safeUser
-}
+  return safeUser;
+};
 
-const verifyEmail=async(payload:VerifyEmailData)=>{
-  const {email,otp}=payload
+const verifyEmail = async (payload: VerifyEmailData) => {
+  const { email, otp } = payload;
   const normalizedEmail = email.toLowerCase().trim();
   //find otp
-  const verification=await prisma.emailVerification.findFirst({
-    where:{
-      email:normalizedEmail,
-      otp
+  const verification = await prisma.emailVerification.findFirst({
+    where: {
+      email: normalizedEmail,
+      otp,
     },
-    orderBy:{
-      createdAt:"desc"
-    }
-  })
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
 
   if (!verification) {
-    throw new AppError(status.NOT_FOUND,"Verification OTP not found")
+    throw new AppError(status.NOT_FOUND, "Verification OTP not found");
   }
 
   //check otp
-  if (verification.otp !==otp) {
-    throw new AppError(status.BAD_REQUEST,"Invalid verification OTP .")
+  if (verification.otp !== otp) {
+    throw new AppError(status.BAD_REQUEST, "Invalid verification OTP .");
   }
 
-//check expire
+  //check expire
   if (verification.expiresAt < new Date()) {
-    throw new AppError(
-      status.BAD_REQUEST,
-      "Verification OTP has expired.",
-    );
+    throw new AppError(status.BAD_REQUEST, "Verification OTP has expired.");
   }
 
-//find user
-const user=await prisma.user.findUnique({
-  where:{
-    email:normalizedEmail
-  }
-})
+  //find user
+  const user = await prisma.user.findUnique({
+    where: {
+      email: normalizedEmail,
+    },
+  });
 
-//check user
+  //check user
   if (!user) {
-    throw new AppError(
-      status.NOT_FOUND,
-      "User not found.",
-    );
+    throw new AppError(status.NOT_FOUND, "User not found.");
   }
 
   //already verified
-    if (user.emailVerified) {
-    throw new AppError(
-      status.BAD_REQUEST,
-      "Email is already verified.",
-    );
+  if (user.emailVerified) {
+    throw new AppError(status.BAD_REQUEST, "Email is already verified.");
   }
 
-   //  Update user + delete OTP
+  //  Update user + delete OTP
   await prisma.$transaction([
     prisma.user.update({
       where: {
@@ -211,14 +216,14 @@ const user=await prisma.user.findUnique({
     }),
   ]);
 
-   return {
+  return {
     message: "Email verified successfully.",
   };
-}
+};
 
 export const authService = {
   registerBuyer,
   loginUser,
   getMe,
-  verifyEmail
+  verifyEmail,
 };
