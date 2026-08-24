@@ -10,6 +10,7 @@ import { categoriesController } from "./categories.controller"
 const router=express.Router()
 
 router.post("/",validateRequest(categoryZodSchema),checkAuth(Role.ADMIN), categoriesController.createCategories)
+router.get("/",checkAuth(Role.ADMIN,Role.SELLER),categoriesController.getAllCategory)
 
 
 

@@ -37,6 +37,24 @@ const createCategories = async (
   return result;
 };
 
+const getAllCategory=async()=>{
+    const result=await prisma.category.findMany({
+        include:{
+            author:{
+                select:{
+                    id:true,
+                    name:true,
+                    email:true,
+                    image:true,
+                    role:true,
+                    
+                }
+            }
+        }
+    })
+    return result
+}
 export const categoriesService = {
   createCategories,
+  getAllCategory
 };
