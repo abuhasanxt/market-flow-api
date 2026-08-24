@@ -38,8 +38,22 @@ const getSellerSuspend = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+const getSellerApproved = catchAsync(async (req: Request, res: Response) => {
+  const result = await adminService.getSellerApproved();
+  
+  sendResponse(res, {
+    success: true,
+    httpStatusCode: status.OK,
+    message: "Seller retrieved successfully",
+    data: result,
+  });
+});
+
+
 export const adminController = {
   getAllSellerApply,
   getSellerPending,
-  getSellerSuspend
+  getSellerSuspend,
+  getSellerApproved
 };

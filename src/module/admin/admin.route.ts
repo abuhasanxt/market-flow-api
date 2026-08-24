@@ -10,4 +10,6 @@ router.get("/vendors/pending",checkAuth(Role.ADMIN),adminController.getSellerPen
 
 router.get("/vendors/suspend",checkAuth(Role.ADMIN),adminController.getSellerSuspend)
 
+router.get("/vendors/approved",checkAuth(Role.ADMIN),adminController.getSellerApproved)
+
 export const adminRoutes=router

@@ -64,8 +64,32 @@ const getSellerSuspend=async()=>{
     })
 }
 
+const getSellerApproved=async()=>{
+    const result=await prisma.vendor.findMany({
+        where:{
+            status:VendorStatus.APPROVED
+        },
+        include:{
+            user:true
+        },
+        orderBy:{
+            createdAt:"desc"
+        }
+    })
+
+     return result.map(({ user, ...vendor }) => {
+        const { passwordHash: _, ...safeUser } = user
+        return {
+            ...vendor,
+            user: safeUser
+        }
+    })
+}
+
+
 export const adminService={
     getAllSellerApply,
     getSellerPending,
-    getSellerSuspend
+    getSellerSuspend,
+    getSellerApproved
 }
