@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+import status from "http-status";
+import AppError from "../../errorHelpers/AppError";
 import { prisma } from "../../lib/prisma";
 import { tokenUtils } from "../../utils/token";
 import { UserData, UserLogin } from "./auth.interface";
@@ -17,7 +19,8 @@ const registerBuyer = async (payload: UserData) => {
   });
 
   if (existingUser) {
-    throw new Error(
+    throw new AppError(
+      status.CONFLICT,
       "An account with this email already exists. please log in .",
     );
   }
@@ -31,7 +34,7 @@ const registerBuyer = async (payload: UserData) => {
     },
   });
   if (!result.email) {
-    throw new Error("Failed to register buyer");
+    throw new AppError(status.BAD_REQUEST,"Failed to register buyer");
   }
 
   const accessToken = tokenUtils.getAccessToken({
@@ -68,13 +71,13 @@ const loginUser = async (payload: UserLogin) => {
   });
 
   if (!user) {
-    throw new Error("User Not FOund");
+    throw new AppError(status.NOT_FOUND,"User Not FOund");
   }
 
   const isPasswordMatched = await bcrypt.compare(password, user.passwordHash);
 
   if (!isPasswordMatched) {
-    throw new Error("Invalid email or password");
+    throw new AppError(status.BAD_REQUEST,"Invalid email or password");
   }
 
   const accessToken = tokenUtils.getAccessToken({
@@ -110,7 +113,7 @@ const getMe=async(userId:string)=>{
     }
   })
   if (!result) {
-    throw new Error("User not found");
+    throw new AppError(status.NOT_FOUND,"User not found");
   }
   const { passwordHash: _, ...safeUser } = result;
   return safeUser

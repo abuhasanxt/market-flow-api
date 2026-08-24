@@ -5,6 +5,8 @@ import { cookiesUtils } from "../utils/cookie";
 import { jwtUtils } from "../utils/jwt";
 import { envVars } from "../config/env";
 import { Role } from "../../generated/prisma/enums";
+import AppError from "../errorHelpers/AppError";
+import status from "http-status";
 
 export const checkAuth =
   (...authRoles: Role[]) =>
@@ -14,7 +16,7 @@ export const checkAuth =
       const accessToken = cookiesUtils.getCookie(req, "accessToken");
 
       if (!accessToken) {
-        throw new Error("Unauthorized access! No access token provided .");
+        throw new AppError(status.UNAUTHORIZED,"Unauthorized access! No access token provided .");
       }
 
       const verifiedToken = jwtUtils.verifyToken(
@@ -23,14 +25,15 @@ export const checkAuth =
       );
 
       if (!verifiedToken.success) {
-        throw new Error("Unauthorized access! Invalid access token.");
+        throw new AppError(status.UNAUTHORIZED,"Unauthorized access! Invalid access token.");
       }
 
       if (
         authRoles.length > 0 &&
         !authRoles.includes(verifiedToken.data!.role as Role)
       ) {
-        throw new Error(
+        throw new AppError(
+          status.FORBIDDEN,
           "Forbidden access! You do not have permission to access this resource",
         );
       }

@@ -4,6 +4,7 @@ import { catchAsync } from "../../shared/catchAsync";
 import { sendResponse } from "../../shared/sendResponse";
 import status from "http-status";
 import { tokenUtils } from "../../utils/token";
+import AppError from "../../errorHelpers/AppError";
 
 const registerBuyer = catchAsync(async (req: Request, res: Response) => {
   const result = await authService.registerBuyer(req.body);
@@ -46,7 +47,7 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
 const getMe=catchAsync(async(req:Request,res:Response)=>{
   const userId=req.user.userId
   if (!userId) {
-    throw new Error("You are unauthorized")
+    throw new AppError(status.UNAUTHORIZED,"You are unauthorized")
   }
 
   const result=await authService.getMe(userId)
