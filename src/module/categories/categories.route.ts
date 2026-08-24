@@ -12,6 +12,8 @@ const router=express.Router()
 router.post("/",validateRequest(categoryZodSchema),checkAuth(Role.ADMIN), categoriesController.createCategories)
 router.get("/",checkAuth(Role.ADMIN,Role.SELLER),categoriesController.getAllCategory)
 
+router.patch("/:id",validateRequest(categoryZodSchema),checkAuth(Role.ADMIN), categoriesController.updateCategory)
+router.delete("/:id",checkAuth(Role.ADMIN), categoriesController.deleteCategory)
 
 
 export const categoriesRoutes=router
