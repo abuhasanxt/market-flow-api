@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { VendorStatus } from "../../../generated/prisma/enums"
 import { prisma } from "../../lib/prisma"
 
 const getAllSellerApply=async()=>{
@@ -20,7 +21,17 @@ const getAllSellerApply=async()=>{
     })
 }
 
+const getSellerPending=async()=>{
+    const result=await prisma.vendor.findMany({
+        where:{
+            status:VendorStatus.PENDING
+        }
+    })
+
+    return result
+}
 
 export const adminService={
-    getAllSellerApply
+    getAllSellerApply,
+    getSellerPending
 }

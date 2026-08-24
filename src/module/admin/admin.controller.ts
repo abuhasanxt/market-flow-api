@@ -6,6 +6,17 @@ import { sendResponse } from "../../shared/sendResponse";
 
 const getAllSellerApply = catchAsync(async (req: Request, res: Response) => {
   const result = await adminService.getAllSellerApply();
+
+  sendResponse(res, {
+    success: true,
+    httpStatusCode: status.OK,
+    message: "Apply seller retrieved successfully",
+    data: result,
+  });
+});
+
+const getSellerPending = catchAsync(async (req: Request, res: Response) => {
+  const result = await adminService.getSellerPending();
   
   sendResponse(res, {
     success: true,
@@ -17,4 +28,5 @@ const getAllSellerApply = catchAsync(async (req: Request, res: Response) => {
 
 export const adminController = {
   getAllSellerApply,
+  getSellerPending
 };
