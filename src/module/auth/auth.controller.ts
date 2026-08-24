@@ -8,20 +8,11 @@ import AppError from "../../errorHelpers/AppError";
 
 const registerBuyer = catchAsync(async (req: Request, res: Response) => {
   const result = await authService.registerBuyer(req.body);
-  const { accessToken, refreshToken, ...rest } = result;
-
-  tokenUtils.setAccessTokenCookie(res, accessToken);
-  tokenUtils.setRefreshTokenCookie(res, refreshToken);
-
   sendResponse(res, {
     success: true,
     httpStatusCode: status.CREATED,
     message: "Buyer Registration successfully",
-    data: {
-      accessToken,
-      refreshToken,
-      ...rest,
-    },
+    data: result
   });
 });
 
@@ -59,8 +50,19 @@ const getMe=catchAsync(async(req:Request,res:Response)=>{
     data:result
   })
 })
+
+const verifyEmail=catchAsync(async(req:Request,res:Response)=>{
+  const result=await authService.verifyEmail(req.body)
+
+  sendResponse(res,{
+    success:true,
+    httpStatusCode:status.OK,
+    message:result.message
+  })
+})
 export const authController = {
   registerBuyer,
   loginUser,
-  getMe
+  getMe,
+  verifyEmail
 };

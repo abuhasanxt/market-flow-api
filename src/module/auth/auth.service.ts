@@ -4,8 +4,9 @@ import status from "http-status";
 import AppError from "../../errorHelpers/AppError";
 import { prisma } from "../../lib/prisma";
 import { tokenUtils } from "../../utils/token";
-import { UserData, UserLogin } from "./auth.interface";
+import { UserData, UserLogin, VerifyEmailData } from "./auth.interface";
 import bcrypt from "bcrypt";
+import { sendEmail } from "../../utils/email";
 
 const registerBuyer = async (payload: UserData) => {
   const { name, email, password } = payload;
@@ -37,28 +38,35 @@ const registerBuyer = async (payload: UserData) => {
     throw new AppError(status.BAD_REQUEST,"Failed to register buyer");
   }
 
-  const accessToken = tokenUtils.getAccessToken({
-    userId: result.id,
-    role: result.role,
-    name: result.name,
-    email: result.email,
-    emailVerified: result.emailVerified,
-  });
+ 
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+   //  OTP expiry - 2 minutes
+  const expiresAt = new Date(
+    Date.now() + 2 * 60 * 1000,
+  );
 
-  const refreshToken = tokenUtils.getRefreshToken({
-    userId: result.id,
-    role: result.role,
-    name: result.name,
-    email: result.email,
-    emailVerified: result.emailVerified,
-  });
+
+  //save otp
+  await prisma.emailVerification.create({
+    data:{
+      email:normalizedEmail,
+      otp,
+      expiresAt
+    }
+  })
+  //send otp
+  await sendEmail({
+    to:normalizedEmail,
+    subject:"Verify your email",
+    templateName:"OTP",
+    templateData:{
+      user:result.name,
+      otp
+    }
+  })
   const { passwordHash: _, ...safeUser } = result;
 
-  return {
-    ...safeUser,
-    accessToken,
-    refreshToken,
-  };
+  return safeUser
 };
 
 const loginUser = async (payload: UserLogin) => {
@@ -95,6 +103,18 @@ const loginUser = async (payload: UserLogin) => {
     emailVerified: user.emailVerified,
   });
 
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+  await sendEmail({
+    to:normalizedEmail,
+    subject:"Verify your email",
+    templateName:"OTP",
+    templateData:{
+      user:user.name,
+      otp
+    }
+  })
+
   const { passwordHash: _, ...safeUser } = user;
 
   const final = {
@@ -119,8 +139,86 @@ const getMe=async(userId:string)=>{
   return safeUser
 }
 
+const verifyEmail=async(payload:VerifyEmailData)=>{
+  const {email,otp}=payload
+  const normalizedEmail = email.toLowerCase().trim();
+  //find otp
+  const verification=await prisma.emailVerification.findFirst({
+    where:{
+      email:normalizedEmail,
+      otp
+    },
+    orderBy:{
+      createdAt:"desc"
+    }
+  })
+
+  if (!verification) {
+    throw new AppError(status.NOT_FOUND,"Verification OTP not found")
+  }
+
+  //check otp
+  if (verification.otp !==otp) {
+    throw new AppError(status.BAD_REQUEST,"Invalid verification OTP .")
+  }
+
+//check expire
+  if (verification.expiresAt < new Date()) {
+    throw new AppError(
+      status.BAD_REQUEST,
+      "Verification OTP has expired.",
+    );
+  }
+
+//find user
+const user=await prisma.user.findUnique({
+  where:{
+    email:normalizedEmail
+  }
+})
+
+//check user
+  if (!user) {
+    throw new AppError(
+      status.NOT_FOUND,
+      "User not found.",
+    );
+  }
+
+  //already verified
+    if (user.emailVerified) {
+    throw new AppError(
+      status.BAD_REQUEST,
+      "Email is already verified.",
+    );
+  }
+
+   //  Update user + delete OTP
+  await prisma.$transaction([
+    prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        emailVerified: true,
+      },
+    }),
+
+    prisma.emailVerification.delete({
+      where: {
+        id: verification.id,
+      },
+    }),
+  ]);
+
+   return {
+    message: "Email verified successfully.",
+  };
+}
+
 export const authService = {
   registerBuyer,
   loginUser,
-  getMe
+  getMe,
+  verifyEmail
 };
