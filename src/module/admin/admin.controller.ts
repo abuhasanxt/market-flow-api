@@ -3,6 +3,7 @@ import { catchAsync } from "../../shared/catchAsync";
 import status from "http-status";
 import { adminService } from "./admin.service";
 import { sendResponse } from "../../shared/sendResponse";
+import AppError from "../../errorHelpers/AppError";
 
 const getAllSellerApply = catchAsync(async (req: Request, res: Response) => {
   const result = await adminService.getAllSellerApply();
@@ -66,10 +67,36 @@ const approveSeller = catchAsync(
     });
   },
 );
+
+
+const suspendSeller = catchAsync(
+  async (req: Request, res: Response) => {
+    const { vendorId } = req.params;
+
+    if (!vendorId) {
+      throw new AppError(
+        status.BAD_REQUEST,
+        "Vendor ID is required.",
+      );
+    }
+
+    const result = await adminService.suspendSeller(
+      vendorId as string,
+    );
+
+    sendResponse(res, {
+      success: true,
+      httpStatusCode: status.OK,
+      message: "Seller suspended successfully.",
+      data: result,
+    });
+  },
+);
 export const adminController = {
   getAllSellerApply,
   getSellerPending,
   getSellerSuspend,
   getSellerApproved,
-  approveSeller
+  approveSeller,
+  suspendSeller
 };

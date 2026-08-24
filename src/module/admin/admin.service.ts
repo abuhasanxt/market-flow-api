@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import status from "http-status"
 import { VendorStatus } from "../../../generated/prisma/enums"
@@ -156,10 +156,56 @@ const approveSeller = async (vendorId: string) => {
     },
   };
 };
+
+
+const suspendSeller = async (vendorId: string) => {
+  const vendor = await prisma.vendor.findUnique({
+    where: {
+      id: vendorId,
+    },
+  });
+
+  if (!vendor) {
+    throw new AppError(
+      status.NOT_FOUND,
+      "Seller application not found.",
+    );
+  }
+
+  if (vendor.status === VendorStatus.SUSPENDED) {
+    throw new AppError(
+      status.BAD_REQUEST,
+      "Seller is already suspended.",
+    );
+  }
+
+  const updatedVendor = await prisma.vendor.update({
+    where: {
+      id: vendorId,
+    },
+    data: {
+      status: "SUSPENDED",
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+    },
+  });
+
+  return updatedVendor;
+};
+
 export const adminService={
     getAllSellerApply,
     getSellerPending,
     getSellerSuspend,
     getSellerApproved,
-    approveSeller
+    approveSeller,
+    suspendSeller
 }

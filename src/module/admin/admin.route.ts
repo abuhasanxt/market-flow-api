@@ -8,6 +8,8 @@ const router=express.Router()
 
 router.patch("/vendors/:vendorId",checkAuth(Role.ADMIN),adminController.approveSeller)
 
+router.patch("/vendors/suspend/:vendorId",checkAuth(Role.ADMIN),adminController.suspendSeller)
+
 router.get("/vendors",checkAuth(Role.ADMIN),adminController.getAllSellerApply)
 router.get("/vendors/pending",checkAuth(Role.ADMIN),adminController.getSellerPending)
 
