@@ -16,5 +16,5 @@ router.post("/refresh",authController.getNewToken)
 router.post("/logout",checkAuth(),authController.logoutUser)
 
 router.patch("/me",validateRequest(userUpdateZodSchema),checkAuth(),authController.updateMe)
-
+router.delete("/me",checkAuth(),authController.deleteMe)
 export const authRoutes=router

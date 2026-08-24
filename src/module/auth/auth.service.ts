@@ -322,9 +322,29 @@ const updateMe = async (userId: string, payload: UpdateUser) => {
     },
     data: updateData,
   });
-
-  return result;
+const { passwordHash: _, ...safeUser } = result;
+  return safeUser;
 };
+
+
+const deleteMe=async(userId:string)=>{
+  const user=await prisma.user.findUnique({
+    where:{
+      id:userId
+    }
+  })
+
+  if (!user) {
+    throw new AppError(status.NOT_FOUND,"User not found")
+  }
+
+  const result=await prisma.user.delete({
+    where:{
+      id:userId
+    }
+  })
+  return result
+}
 export const authService = {
   registerBuyer,
   loginUser,
@@ -332,5 +352,6 @@ export const authService = {
   verifyEmail,
   getNewToken,
   logoutUser,
-  updateMe
+  updateMe,
+  deleteMe
 };
