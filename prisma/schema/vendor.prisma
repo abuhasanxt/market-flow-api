@@ -1,0 +1,18 @@
+
+
+model Vendor {
+  id              String       @id @default(uuid())
+  userId          String       @unique
+  storeName       String
+  status          VendorStatus @default(PENDING)
+  commissionRate  Int          @default(1000)
+  balance         Int          @default(0)
+  payoutAccountId String?
+
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@map("vendor")
+}

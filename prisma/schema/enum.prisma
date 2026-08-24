@@ -3,3 +3,9 @@ enum Role {
   SELLER
   ADMIN
 }
+
+enum VendorStatus {
+  PENDING
+  APPROVED
+  SUSPENDED
+}
