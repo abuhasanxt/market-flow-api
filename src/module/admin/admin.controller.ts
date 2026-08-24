@@ -50,10 +50,26 @@ const getSellerApproved = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const approveSeller = catchAsync(
+  async (req: Request, res: Response) => {
+    const { vendorId } = req.params;
 
+    const result = await adminService.approveSeller(
+      vendorId as string,
+    );
+
+    sendResponse(res, {
+      success: true,
+      httpStatusCode: status.OK,
+      message: "Seller approved successfully.",
+      data: result,
+    });
+  },
+);
 export const adminController = {
   getAllSellerApply,
   getSellerPending,
   getSellerSuspend,
-  getSellerApproved
+  getSellerApproved,
+  approveSeller
 };

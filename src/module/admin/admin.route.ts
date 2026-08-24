@@ -5,6 +5,9 @@ import { Role } from "../../../generated/prisma/enums"
 
 const router=express.Router()
 
+
+router.patch("/vendors/:vendorId",checkAuth(Role.ADMIN),adminController.approveSeller)
+
 router.get("/vendors",checkAuth(Role.ADMIN),adminController.getAllSellerApply)
 router.get("/vendors/pending",checkAuth(Role.ADMIN),adminController.getSellerPending)
 
