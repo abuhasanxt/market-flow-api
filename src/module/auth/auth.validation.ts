@@ -17,3 +17,11 @@ export const emailVerifyZodSchema=z.object({
         email:z.email(),
         otp:z.string("OTP is required and must be string").min(6,"OTP must be at least 6 characters")
 })
+
+
+export const userUpdateZodSchema=z.object({
+      name: z
+        .string("Name is required and must be string")
+        .min(2, "Name must be at least 2 characters")
+        .max(20, "Name must be at most 20 characters"),
+})

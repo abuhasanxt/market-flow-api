@@ -4,7 +4,12 @@ import status from "http-status";
 import AppError from "../../errorHelpers/AppError";
 import { prisma } from "../../lib/prisma";
 import { tokenUtils } from "../../utils/token";
-import { UserData, UserLogin, VerifyEmailData } from "./auth.interface";
+import {
+  UpdateUser,
+  UserData,
+  UserLogin,
+  VerifyEmailData,
+} from "./auth.interface";
 import bcrypt from "bcrypt";
 import { sendEmail } from "../../utils/email";
 import { jwtUtils } from "../../utils/jwt";
@@ -240,16 +245,13 @@ const getNewToken = async (refreshToken: string) => {
     throw new AppError(status.UNAUTHORIZED, "Invalid or expired refresh token");
   }
 
-  const data=verifiedToken.data as JwtPayload;
+  const data = verifiedToken.data as JwtPayload;
 
   if (!data) {
-      throw new AppError(
-      status.UNAUTHORIZED,
-      "Invalid refresh token payload.",
-    );
+    throw new AppError(status.UNAUTHORIZED, "Invalid refresh token payload.");
   }
 
-   const newAccessToken = tokenUtils.getAccessToken({
+  const newAccessToken = tokenUtils.getAccessToken({
     userId: data.userId,
     role: data.role,
     name: data.name,
@@ -267,20 +269,68 @@ const getNewToken = async (refreshToken: string) => {
 
   return {
     newAccessToken,
-    newRefreshToken
-  }
+    newRefreshToken,
+  };
 };
 
-const logoutUser=async()=>{
+const logoutUser = async () => {
   return {
-    message:"Logged out successfully"
+    message: "Logged out successfully",
+  };
+};
+
+const updateMe = async (userId: string, payload: UpdateUser) => {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+  });
+
+  if (!user) {
+    throw new AppError(status.NOT_FOUND, "User not found");
   }
-}
+
+  const updateData: {
+    name?: string;
+    image?: string;
+  } = {};
+
+  if (payload.name !== undefined) {
+    updateData.name = payload.name;
+  }
+
+  if (Object.keys(payload).length === 0) {
+    throw new AppError(
+      status.BAD_REQUEST,
+      "Please provide at least one field to update",
+    );
+  }
+
+  const isSame =
+    (updateData.name === undefined || updateData.name === user.name) &&
+    (updateData.image === undefined || updateData.image === user.image);
+
+  if (isSame) {
+    throw new AppError(
+      status.CONFLICT,
+      "Your provided data is already up to date",
+    );
+  }
+  const result = await prisma.user.update({
+    where: {
+      id: userId,
+    },
+    data: updateData,
+  });
+
+  return result;
+};
 export const authService = {
   registerBuyer,
   loginUser,
   getMe,
   verifyEmail,
   getNewToken,
-  logoutUser
+  logoutUser,
+  updateMe
 };
