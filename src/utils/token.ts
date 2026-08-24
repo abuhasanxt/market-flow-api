@@ -43,10 +43,32 @@ const setRefreshTokenCookie=(res:Response,token:string)=>{
     })
 }
 
+const clearAccessTokenCookie = (res: Response) => {
+  cookiesUtils.clearCookie(res, "accessToken", {
+    httpOnly: true,
+    secure: envVars.NODE_ENV === "production",
+    sameSite:
+      envVars.NODE_ENV === "production" ? "none" : "lax",
+    path: "/",
+  });
+};
+
+const clearRefreshTokenCookie = (res: Response) => {
+  cookiesUtils.clearCookie(res, "refreshToken", {
+    httpOnly: true,
+    secure: envVars.NODE_ENV === "production",
+    sameSite:
+      envVars.NODE_ENV === "production" ? "none" : "lax",
+    path: "/",
+  });
+};
+
 export const tokenUtils={
     getAccessToken,
     getRefreshToken,
     setAccessTokenCookie,
-    setRefreshTokenCookie
+    setRefreshTokenCookie,
+    clearAccessTokenCookie,
+    clearRefreshTokenCookie
 
 }
