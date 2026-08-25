@@ -6,12 +6,12 @@ import { productServices } from "./product.service";
 import { sendResponse } from "../../shared/sendResponse";
 
 const createProduct = catchAsync(async (req: Request, res: Response) => {
-  const sellerId = req.user.userId;
-  if (!sellerId) {
+  const userId = req.user.userId;
+  if (!userId) {
     throw new AppError(status.UNAUTHORIZED, "You are unauthorized");
   }
 
-  const result = await productServices.createProduct(sellerId, req.body);
+  const result = await productServices.createProduct(userId, req.body);
 
   sendResponse(res, {
     success: true,
