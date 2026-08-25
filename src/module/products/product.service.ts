@@ -288,10 +288,49 @@ const updateProduct = async (
 
   return result;
 };
+
+
+const deleteProduct=async(userId:string,id:string)=>{
+      
+  //  Find vendor by authenticated user
+  const vendor = await prisma.vendor.findUnique({
+    where: {
+      userId,
+    },
+  });
+
+  if (!vendor) {
+    throw new AppError(status.NOT_FOUND, "Vendor not found");
+  }
+
+  //  Find product owned by this vendor
+  const existingProduct = await prisma.product.findFirst({
+    where: {
+      id,
+      vendorId: vendor.id,
+    },
+  });
+
+  if (!existingProduct) {
+    throw new AppError(
+      status.NOT_FOUND,
+      "Product not found or you are not the owner",
+    );
+  }
+//  delete only owner's product
+  const result=await prisma.product.delete({
+    where:{
+       id:existingProduct.id
+    }
+  })
+
+  return result
+}
 export const productServices = {
   createProduct,
   getAllProduct,
   getProductById,
   getMyProduct,
-  updateProduct
+  updateProduct,
+  deleteProduct
 };

@@ -15,6 +15,8 @@ router.post(
 );
 router.patch("/:id",validateRequest(updateProductZodSchema),checkAuth(Role.SELLER),productController.updateProduct)
 
+router.delete("/:id",checkAuth(Role.SELLER),productController.deleteProduct)
+
 router.get("/me",checkAuth(Role.SELLER),productController.getMyProduct)
 router.get("/",productController.getAllProduct)
 router.get("/:id",productController.getProductById)
