@@ -1,5 +1,5 @@
 model Product {
-  id          String   @id @default(uuid())
+  id          String  @id @default(uuid())
   vendorId    String
   name        String
   description String?
@@ -8,15 +8,17 @@ model Product {
   categoryId  String
   imageUrl    String?
 
-  ratingAvg   Float    @default(0)
-  ratingCount Int      @default(0)
-  isActive    Boolean  @default(true)
+  ratingAvg   Float   @default(0)
+  ratingCount Int     @default(0)
+  isActive    Boolean @default(true)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  cartItems CartItem[]
 
-  vendor      Vendor   @relation(fields: [vendorId], references: [id])
-  category    Category @relation(fields: [categoryId], references: [id])
+  vendor   Vendor   @relation(fields: [vendorId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([vendorId])
   @@index([categoryId])
