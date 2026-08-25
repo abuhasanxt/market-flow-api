@@ -13,7 +13,7 @@ router.post(
   checkAuth(Role.SELLER),
   productController.createProduct,
 );
-
+router.get("/me",checkAuth(Role.SELLER),productController.getMyProduct)
 router.get("/",productController.getAllProduct)
 router.get("/:id",productController.getProductById)
 

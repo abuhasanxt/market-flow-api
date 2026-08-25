@@ -155,12 +155,31 @@ const getAllProduct = async (query: ProductQuery) => {
 
 
 const getProductById = async (id: string) => {
-  const result = await prisma.product.findUnique({
+  const result = await prisma.product.findFirst({
     where: {
       id,
     },
     include: {
-      category: true,
+      category: {
+        select:{
+          name:true
+        }
+      },
+      vendor:{
+        select:{
+          id:true,
+          storeName:true,
+          status:true,
+          user:{
+            select:{
+              name:true,
+              email:true,
+              emailVerified:true,
+              role:true
+            }
+          }
+        }
+      },
     },
   });
   if (!result) {
@@ -169,8 +188,36 @@ const getProductById = async (id: string) => {
   return result;
 };
 
+
+const getMyProduct = async (userId: string) => {
+  const vendor = await prisma.vendor.findUnique({
+    where: {
+      userId,
+    },
+  });
+
+  if (!vendor) {
+    throw new AppError(status.NOT_FOUND, "Vendor not found");
+  }
+
+  const result = await prisma.product.findMany({
+    where: {
+      vendorId: vendor.id,
+    },
+    include: {
+      category: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+  console.log("🚀 ~ getMyProduct ~ result:", result)
+
+  return result;
+};
 export const productServices = {
   createProduct,
   getAllProduct,
-  getProductById
+  getProductById,
+  getMyProduct
 };
