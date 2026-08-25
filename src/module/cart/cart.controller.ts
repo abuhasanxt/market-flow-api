@@ -58,8 +58,28 @@ const updateCartItem = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
+const deleteCartItem = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user.userId;
+
+  if (!userId) {
+    throw new AppError(status.UNAUTHORIZED, "You are Unauthorized");
+  }
+
+  const { productId } = req.params;
+
+  const result = await cartService.deleteCartItem(userId, productId as string);
+
+  sendResponse(res, {
+    success: true,
+    httpStatusCode: status.OK,
+    message: "Cart item removed successfully",
+    data: result,
+  });
+});
 export const cartController={
     addToCart,
     getCart,
-    updateCartItem
+    updateCartItem,
+    deleteCartItem
 }

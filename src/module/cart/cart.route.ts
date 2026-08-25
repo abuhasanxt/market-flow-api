@@ -21,6 +21,11 @@ router.patch(
   validateRequest(updateCartZodSchema),
   cartController.updateCartItem,
 );
+router.delete(
+  "/items/:productId",
+  checkAuth(Role.BUYER),
+  cartController.deleteCartItem,
+);
 router.get("/", checkAuth(Role.BUYER), cartController.getCart);
 
 export const cartRoutes=router
