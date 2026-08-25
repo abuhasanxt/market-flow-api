@@ -97,7 +97,26 @@ const addToCart = async (
   return results;
 };
 
+const getCart = async (userId: string) => {
+  const cart = await prisma.cart.findUnique({
+    where: {
+      userId
+    },
+    include: {
+      items: {
+        include: {
+          product: true,
+        },
+      },
+    },
+  });
+  if (!cart) {
+    throw new AppError(status.NOT_FOUND, `Cart for user  not found`);
+  }
 
+  return cart;
+};
 export const cartService={
-  addToCart
+  addToCart,
+  getCart
 }

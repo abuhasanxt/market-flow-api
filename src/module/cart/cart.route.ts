@@ -15,6 +15,6 @@ router.post(
   validateRequest(createCartZodSchema),
   cartController.addToCart,
 );
-
+router.get("/", checkAuth(Role.BUYER), cartController.getCart);
 
 export const cartRoutes=router

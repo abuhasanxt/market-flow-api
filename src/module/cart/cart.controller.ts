@@ -23,7 +23,23 @@ const addToCart = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getCart = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user.userId;
+  if (!userId) {
+    throw new AppError(status.UNAUTHORIZED, "You are Unauthorized");
+  }
+
+  const result = await cartService.getCart(userId);
+
+  sendResponse(res, {
+    success: true,
+    httpStatusCode: status.OK,
+    message: "Cart retrieved successfully",
+    data: result,
+  });
+});
 
 export const cartController={
-    addToCart
+    addToCart,
+    getCart
 }
