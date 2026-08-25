@@ -18,3 +18,10 @@ export const createCartZodSchema = z.object({
     )
     .min(1, "At least one product is required"),
 });
+
+export const updateCartZodSchema = z.object({
+        quantity: z
+          .number("Quantity is required And number")
+          .int("Quantity must be an integer")
+          .positive("Quantity must be greater than 0"),
+      })

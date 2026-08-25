@@ -116,7 +116,65 @@ const getCart = async (userId: string) => {
 
   return cart;
 };
+
+
+const updateCartItem = async (
+  userId: string,
+  productId: string,
+  quantity: number,
+) => {
+  // Find user's cart
+  const cart = await prisma.cart.findUnique({
+    where: {
+      userId,
+    },
+  });
+
+  if (!cart) {
+    throw new AppError(status.NOT_FOUND, "Cart not found");
+  }
+
+  // Find cart item
+  const existingItem = await prisma.cartItem.findUnique({
+    where: {
+      cartId_productId: {
+        cartId: cart.id,
+        productId,
+      },
+    },
+    include: {
+      product: true,
+    },
+  });
+
+  if (!existingItem) {
+    throw new AppError(status.NOT_FOUND, "Product not found in cart");
+  }
+
+  // Check product active
+  if (!existingItem.product.isActive) {
+    throw new AppError(status.BAD_REQUEST, "Product is not active");
+  }
+
+  // Check stock
+  if (quantity > existingItem.product.stock) {
+    throw new AppError(status.BAD_REQUEST, "Insufficient stock");
+  }
+
+  // Update quantity
+  const result = await prisma.cartItem.update({
+    where: {
+      id: existingItem.id,
+    },
+    data: {
+      quantity,
+    },
+  });
+
+  return result;
+};
 export const cartService={
   addToCart,
-  getCart
+  getCart,
+  updateCartItem
 }

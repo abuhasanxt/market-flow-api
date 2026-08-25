@@ -39,7 +39,27 @@ const getCart = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+
+const updateCartItem = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user.userId;
+  const { productId } = req.params;
+  const { quantity } = req.body;
+  const result = await cartService.updateCartItem(
+    userId,
+    productId as string,
+    quantity,
+  );
+
+  sendResponse(res, {
+    success: true,
+    httpStatusCode: status.OK,
+    message: "Cart item updated successfully",
+    data: result,
+  });
+});
 export const cartController={
     addToCart,
-    getCart
+    getCart,
+    updateCartItem
 }

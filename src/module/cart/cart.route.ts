@@ -1,7 +1,7 @@
 import express from "express"
 import { checkAuth } from "../../middleware/checkAuth";
 import { Role } from "../../../generated/prisma/enums";
-import { createCartZodSchema } from "./card.validation";
+import { createCartZodSchema, updateCartZodSchema } from "./card.validation";
 import { cartController } from "./cart.controller";
 import { validateRequest } from "../../middleware/valideRequest";
 
@@ -14,6 +14,12 @@ router.post(
   checkAuth(Role.BUYER),
   validateRequest(createCartZodSchema),
   cartController.addToCart,
+);
+router.patch(
+  "/items/:productId",
+  checkAuth(Role.BUYER),
+  validateRequest(updateCartZodSchema),
+  cartController.updateCartItem,
 );
 router.get("/", checkAuth(Role.BUYER), cartController.getCart);
 
