@@ -1,0 +1,21 @@
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  price       Int
+  stock       Int
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+
+  categoryId  String
+  sellerId    String
+
+  category    Category @relation(fields: [categoryId], references: [id])
+  seller      User     @relation(fields: [sellerId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([sellerId])
+}
