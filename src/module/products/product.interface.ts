@@ -13,3 +13,18 @@ export interface ProductData {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+
+
+export interface ProductQuery {
+  categoryId?: string;
+  vendorId?:string;
+  minPrice?: string;
+  maxPrice?: string;
+  inStock?: string;
+  q?: string;
+  sort?: "price" | "createdAt";
+  order?: "asc" | "desc";
+  page?: string;
+  limit?: string;
+}
