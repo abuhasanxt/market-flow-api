@@ -153,7 +153,24 @@ const getAllProduct = async (query: ProductQuery) => {
   };
 };
 
+
+const getProductById = async (id: string) => {
+  const result = await prisma.product.findUnique({
+    where: {
+      id,
+    },
+    include: {
+      category: true,
+    },
+  });
+  if (!result) {
+    throw new AppError(status.NOT_FOUND, "Product not found");
+  }
+  return result;
+};
+
 export const productServices = {
   createProduct,
   getAllProduct,
+  getProductById
 };
