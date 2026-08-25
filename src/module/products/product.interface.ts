@@ -28,3 +28,14 @@ export interface ProductQuery {
   page?: string;
   limit?: string;
 }
+
+
+export interface ProductUpdate{
+    name?: string;
+  description?: string;
+  price?: number;
+  stock?: number;
+  imageUrl?: string;
+  isActive?: boolean;
+    
+}

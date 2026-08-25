@@ -2,7 +2,7 @@
 import status from "http-status";
 import AppError from "../../errorHelpers/AppError";
 import { prisma } from "../../lib/prisma";
-import { ProductData, ProductQuery } from "./product.interface";
+import { ProductData, ProductQuery, ProductUpdate } from "./product.interface";
 
 const createProduct = async (
   userId: string,
@@ -211,7 +211,80 @@ const getMyProduct = async (userId: string) => {
       createdAt: "desc",
     },
   });
-  console.log("🚀 ~ getMyProduct ~ result:", result)
+
+  return result;
+};
+
+
+
+const updateProduct = async (
+  userId: string,
+  id: string,
+  payload: ProductUpdate,
+) => {
+  //  Find vendor by authenticated user
+  const vendor = await prisma.vendor.findUnique({
+    where: {
+      userId,
+    },
+  });
+
+  if (!vendor) {
+    throw new AppError(status.NOT_FOUND, "Vendor not found");
+  }
+
+  //  Find product owned by this vendor
+  const existingProduct = await prisma.product.findFirst({
+    where: {
+      id,
+      vendorId: vendor.id,
+    },
+  });
+
+  if (!existingProduct) {
+    throw new AppError(
+      status.NOT_FOUND,
+      "Product not found or you are not the owner",
+    );
+  }
+
+  //  Empty payload check
+  if (Object.keys(payload).length === 0) {
+    throw new AppError(
+      status.BAD_REQUEST,
+      "Please provide at least one field to update",
+    );
+  }
+
+  //  Check whether data actually changed
+  const isSame =
+    (payload.name === undefined ||
+      payload.name === existingProduct.name) &&
+    (payload.description === undefined ||
+      payload.description === existingProduct.description) &&
+    (payload.price === undefined ||
+      payload.price === existingProduct.price) &&
+    (payload.stock === undefined ||
+      payload.stock === existingProduct.stock) &&
+    (payload.imageUrl === undefined ||
+      payload.imageUrl === existingProduct.imageUrl) &&
+    (payload.isActive === undefined ||
+      payload.isActive === existingProduct.isActive);
+
+  if (isSame) {
+    throw new AppError(
+      status.CONFLICT,
+      "Your provided data is already up to date",
+    );
+  }
+
+  //  Update only owner's product
+  const result = await prisma.product.update({
+    where: {
+      id: existingProduct.id,
+    },
+    data: payload,
+  });
 
   return result;
 };
@@ -219,5 +292,6 @@ export const productServices = {
   createProduct,
   getAllProduct,
   getProductById,
-  getMyProduct
+  getMyProduct,
+  updateProduct
 };
