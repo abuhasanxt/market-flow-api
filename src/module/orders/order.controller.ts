@@ -32,7 +32,23 @@ const getAllOrder = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+const getOrderById = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user?.userId;
+  const role = req.user?.role;
+  const {id}=req.params
+
+  const result = await orderService.getOrderById(userId, role,id as string);
+
+  sendResponse(res, {
+    success: true,
+    httpStatusCode: status.OK,
+    message: "Order fetching successfully",
+    data: result,
+  });
+});
 export const orderController = {
   createOrder,
-  getAllOrder
+  getAllOrder,
+  getOrderById
 };
