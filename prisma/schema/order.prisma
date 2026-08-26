@@ -1,0 +1,58 @@
+model Order {
+  id          String      @id @default(uuid())
+  userId      String
+  totalAmount Int
+  status      OrderStatus @default(PENDING)
+  // payment     Payment?
+
+  user      User       @relation(fields: [userId], references: [id])
+  subOrders SubOrder[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model SubOrder {
+  id       String @id @default(uuid())
+  orderId  String
+  vendorId String
+
+  subtotal         Int
+  commissionAmount Int
+  vendorEarning    Int
+
+  status       SubOrderStatus @default(PENDING)
+  payoutStatus PayoutStatus   @default(PENDING)
+
+  order  Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  vendor Vendor      @relation(fields: [vendorId], references: [id])
+  items  OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([vendorId])
+  @@index([status])
+  @@index([payoutStatus])
+}
+
+model OrderItem {
+  id         String @id @default(uuid())
+  subOrderId String
+  productId  String
+
+  name     String
+  price    Int
+  quantity Int
+
+  subOrder SubOrder @relation(fields: [subOrderId], references: [id], onDelete: Cascade)
+
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([subOrderId])
+  @@index([productId])
+}

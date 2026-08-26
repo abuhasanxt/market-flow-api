@@ -10,6 +10,7 @@ model Vendor {
   payoutAccountId String?
 
   products Product[]
+  subOrders SubOrder[]
   
   user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 

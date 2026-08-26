@@ -10,6 +10,7 @@ model User {
   cart          Cart?
   vendor     Vendor?
   categories Category[]
+  orders Order[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

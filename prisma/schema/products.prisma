@@ -13,6 +13,7 @@ model Product {
   isActive    Boolean @default(true)
 
   cartItems CartItem[]
+  orderItems OrderItem[]
 
   vendor   Vendor   @relation(fields: [vendorId], references: [id])
   category Category @relation(fields: [categoryId], references: [id])
