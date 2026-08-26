@@ -2,6 +2,7 @@ import status from "http-status";
 import AppError from "../../errorHelpers/AppError";
 import { prisma } from "../../lib/prisma";
 import { envVars } from "../../config/env";
+import { Role } from "../../../generated/prisma/enums";
 
 // pay now order
 const createOrder = async (userId: string) => {
@@ -202,6 +203,36 @@ const createOrder = async (userId: string) => {
   }
 };
 
+const getAllOrder = async (userId: string, role: Role) => {
+  const result = await prisma.order.findMany({
+    where:
+      role === Role.ADMIN
+        ? {}
+        : {
+            userId,
+          },
+
+    include: {
+      subOrders: {
+        include: {
+          items: true,
+        },
+      },
+    },
+
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  if (result.length === 0) {
+    throw new AppError(status.NOT_FOUND, "No orders found");
+  }
+
+  return result;
+};
+
 export const orderService = {
   createOrder,
+  getAllOrder
 };
