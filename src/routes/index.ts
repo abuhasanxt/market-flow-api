@@ -5,6 +5,7 @@ import { adminRoutes } from "../module/admin/admin.route"
 import { categoriesRoutes } from "../module/categories/categories.route"
 import { productRoutes } from "../module/products/product.route"
 import { cartRoutes } from "../module/cart/cart.route"
+import { orderRoutes } from "../module/orders/order.route"
 
 const router=express.Router()
 router.use("/categories",categoriesRoutes)
@@ -13,5 +14,6 @@ router.use("/vendors",vendorRoutes)
 router.use("/admin",adminRoutes)
 router.use("/products",productRoutes)
 router.use("/cart",cartRoutes)
+router.use("/orders",orderRoutes)
 
 export const IndexRoute=router

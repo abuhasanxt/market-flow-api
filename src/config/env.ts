@@ -18,6 +18,7 @@ interface EnvConfig {
     SMTP_PORT: string;
     SMTP_FROM: string;
   };
+  PLATFORM_COMMISSION_RATE: number;
 }
 
 const loadEnvVariables = (): EnvConfig => {
@@ -33,6 +34,7 @@ const loadEnvVariables = (): EnvConfig => {
     "EMAIL_SENDER_SMTP_HOST",
     "EMAIL_SENDER_SMTP_PORT",
     "EMAIL_SENDER_SMTP_FROM",
+    "PLATFORM_COMMISSION_RATE",
   ];
   requiredEnvVariable.forEach((variable) => {
     if (!process.env[variable]) {
@@ -57,6 +59,7 @@ const loadEnvVariables = (): EnvConfig => {
       SMTP_PORT: process.env.EMAIL_SENDER_SMTP_PORT as string,
       SMTP_FROM: process.env.EMAIL_SENDER_SMTP_FROM as string,
     },
+    PLATFORM_COMMISSION_RATE: Number(process.env.PLATFORM_COMMISSION_RATE),
   };
 };
 export const envVars: EnvConfig = loadEnvVariables();
