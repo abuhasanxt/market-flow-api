@@ -19,6 +19,10 @@ interface EnvConfig {
     SMTP_FROM: string;
   };
   PLATFORM_COMMISSION_RATE: number;
+  STRIPE: {
+    SECRET_KEY: string;
+    WEBHOOK_SECRET: string;
+  }
 }
 
 const loadEnvVariables = (): EnvConfig => {
@@ -35,6 +39,8 @@ const loadEnvVariables = (): EnvConfig => {
     "EMAIL_SENDER_SMTP_PORT",
     "EMAIL_SENDER_SMTP_FROM",
     "PLATFORM_COMMISSION_RATE",
+    "STRIPE_SECRET_KEY",
+    "STRIPE_WEBHOOK_SECRET"
   ];
   requiredEnvVariable.forEach((variable) => {
     if (!process.env[variable]) {
@@ -60,6 +66,10 @@ const loadEnvVariables = (): EnvConfig => {
       SMTP_FROM: process.env.EMAIL_SENDER_SMTP_FROM as string,
     },
     PLATFORM_COMMISSION_RATE: Number(process.env.PLATFORM_COMMISSION_RATE),
-  };
+    STRIPE:{
+      SECRET_KEY: process.env.STRIPE_SECRET_KEY as string,
+      WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET as string,  
+    }
+  }
 };
 export const envVars: EnvConfig = loadEnvVariables();

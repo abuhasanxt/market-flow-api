@@ -3,7 +3,18 @@ import { IndexRoute } from "./routes";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "./middleware/globalErrorHandler";
 import { notFound } from "./middleware/notFound";
+
 const app: Application = express();
+
+
+
+app.post("/webhook", express.raw({type:"application/json"}), 
+async(req: Request, res: Response) => {
+  console.log("Webhook received", req.body)
+  res.status(200).json({"message": "Webhook received"})  
+}
+  
+)
 
 
 // Enable URL-encoded form data parsing

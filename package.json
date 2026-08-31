@@ -8,6 +8,7 @@
     "build": "tsc",
     "dev": "tsx watch src/server.ts",
     "lint": "eslint ./src/**/*",
+    "stripe:webhook": "stripe listen --forward-to localhost:5000/webhook",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -18,10 +19,12 @@
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
     "@types/ejs": "^3.1.5",
     "@types/nodemailer": "^8.0.1",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "ejs": "^6.0.1",
     "express": "^5.2.1",
@@ -29,6 +32,7 @@
     "jsonwebtoken": "^9.0.3",
     "nodemailer": "^9.0.5",
     "pg": "^8.23.0",
+    "stripe": "^22.6.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
