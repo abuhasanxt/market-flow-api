@@ -1,22 +1,22 @@
-// model Payment {
-//   id                 String        @id @default(uuid())
-//   orderId            String        @unique
+model Payment {
+  id                 String        @id @default(uuid())
+  orderId            String        @unique
 
-//   paymentIntentId    String?       @unique
-//   transactionId      String        @unique @db.Uuid
+  paymentIntentId    String?       @unique
+  transactionId      String        @unique @db.Uuid
 
-//   amount             Int
-//   currency           String
-//   status             PaymentStatus @default(UNPAID)
+  amount             Int
+  currency           String
+  status             PaymentStatus @default(UNPAID)
 
-//   paymentGatewayData Json?
-//   stripeEventId      String?       @unique
+  paymentGatewayData Json?
+  stripeEventId      String?       @unique
 
-//   // order Order @relation(fields: [orderId],references: [id],onDelete:Cascade)
+  order Order @relation(fields: [orderId],references: [id],onDelete:Cascade)
 
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-//   @@index([status])
-//   @@map("payments")
-// }
+  @@index([status])
+  @@map("payments")
+}

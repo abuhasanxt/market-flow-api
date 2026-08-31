@@ -3,7 +3,7 @@ model Order {
   userId      String
   totalAmount Int
   status      OrderStatus @default(PENDING)
-  // payment     Payment?
+  payment     Payment?
 
   user      User       @relation(fields: [userId], references: [id])
   subOrders SubOrder[]
