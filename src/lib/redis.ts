@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createClient, RedisClientType } from "redis";
 import { envVars } from "../config/env";
 
@@ -37,6 +38,7 @@ class RedisService {
       await this.client.connect();
     } catch (error) {
       console.log(error);
+      this.isConnected = false;
     }
   }
   private ensureConnection(): RedisClientType {
@@ -44,14 +46,64 @@ class RedisService {
       throw new Error("Redis client not initialized . Call connect() first.");
     }
     if (!this.isConnected) {
-        throw new Error("Redis client not connect. ")
+      throw new Error("Redis client not connect. ");
     }
 
-    return this.client
+    return this.client;
   }
 
+  async get(key: string): Promise<string | null> {
+    try {
+      const client = this.ensureConnection();
+      return await client.get(key);
+    } catch (error) {
+      console.error("Redis Get Error: ", error);
+      return null;
+    }
+  }
 
+  async set(key: string, value: any, ttlInSeconds: number): Promise<void> {
+    try {
+      const client = this.ensureConnection();
+
+      const stringValue =
+        typeof value === "string" ? value : JSON.stringify(value);
+      await client.set(key, stringValue, { EX: ttlInSeconds });
+    } catch (error) {
+      console.log("Redis SET error : ", error);
+    }
+  }
+
+  async update(key: string, value: any, ttlInSeconds: number): Promise<void> {
+    await this.set(key, value, ttlInSeconds);
+  }
+
+  async delete(key: string): Promise<void> {
+    try {
+      const client = this.ensureConnection();
+      await client.del(key);
+    } catch (error) {
+      console.log("Redis DELETE Error", error);
+    }
+  }
+
+  async isAvailable(): Promise<boolean> {
+    try {
+      const client = this.ensureConnection();
+      await client.ping();
+      return true;
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
+  }
+
+  async disConnect(): Promise<void> {
+    if (this.client && this.isConnected) {
+      await this.client.quit();
+      this.isConnected = false;
+    }
+  }
 }
 
-
-export const redisService=new RedisService()
+export const redisService = new RedisService();
