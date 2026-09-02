@@ -25,6 +25,8 @@ interface EnvConfig {
     WEBHOOK_SECRET: string;
   }
   REDIS_URL: string;
+  ADMIN_EMAIL:string;
+  ADMIN_PASSWORD:string
 }
 
 const loadEnvVariables = (): EnvConfig => {
@@ -43,7 +45,9 @@ const loadEnvVariables = (): EnvConfig => {
     "EMAIL_SENDER_SMTP_FROM",
     "PLATFORM_COMMISSION_RATE",
     "STRIPE_SECRET_KEY",
-    "STRIPE_WEBHOOK_SECRET"
+    "STRIPE_WEBHOOK_SECRET",
+    "ADMIN_EMAIL",
+    "ADMIN_PASSWORD"
   ];
   requiredEnvVariable.forEach((variable) => {
     if (!process.env[variable]) {
@@ -74,7 +78,9 @@ const loadEnvVariables = (): EnvConfig => {
     STRIPE:{
       SECRET_KEY: process.env.STRIPE_SECRET_KEY as string,
       WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET as string,  
-    }
+    },
+    ADMIN_EMAIL:process.env.ADMIN_EMAIL as string,
+    ADMIN_PASSWORD:process.env.ADMIN_PASSWORD as string
   }
 };
 export const envVars: EnvConfig = loadEnvVariables();

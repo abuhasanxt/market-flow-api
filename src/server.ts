@@ -1,10 +1,12 @@
 
 import app from "./app";
+import { seedAdmin } from "./utils/seed";
 const port = 5000; // The port your express server will be running on.
 // Start the server
 
-const  bootstrap=()=>{
+const  bootstrap=async()=>{
 try {
+    await seedAdmin()
     app.listen(port,()=>{
     console.log(`Server is running on http://localhost:${port}`)
 })
