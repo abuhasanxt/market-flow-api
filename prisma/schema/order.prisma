@@ -26,6 +26,7 @@ model SubOrder {
 
   status       SubOrderStatus @default(PENDING)
   payoutStatus PayoutStatus   @default(PENDING)
+    payout    Payout?
 
   order  Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
   vendor Vendor      @relation(fields: [vendorId], references: [id])

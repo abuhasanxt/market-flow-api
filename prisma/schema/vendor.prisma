@@ -11,6 +11,7 @@ model Vendor {
 
   products Product[]
   subOrders SubOrder[]
+   payouts   Payout[]
   
   user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 

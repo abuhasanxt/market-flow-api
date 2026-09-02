@@ -2,6 +2,7 @@ import { Worker } from "bullmq";
 import { redisConnection } from "./connection";
 import { prisma } from "../lib/prisma";
 import { PayoutStatus } from "../../generated/prisma/enums";
+import { randomUUID } from "node:crypto";
 
 export const payoutWorker = new Worker(
   "payout-queue",
@@ -10,10 +11,16 @@ export const payoutWorker = new Worker(
 
     const { subOrderId, vendorId, amount } = job.data;
 
-console.log("Processing payout for SubOrder:", subOrderId, "Vendor:", vendorId, "Amount:", amount);
-
+    console.log(
+      "Processing payout for SubOrder:",
+      subOrderId,
+      "Vendor:",
+      vendorId,
+      "Amount:",
+      amount,
+    );
     await prisma.$transaction(async (tx) => {
-      // 1. Find SubOrder
+      //  Find SubOrder
       const subOrder = await tx.subOrder.findUnique({
         where: {
           id: subOrderId,
@@ -21,26 +28,20 @@ console.log("Processing payout for SubOrder:", subOrderId, "Vendor:", vendorId, 
       });
 
       if (!subOrder) {
-        throw new Error(
-          `SubOrder ${subOrderId} not found`,
-        );
+        throw new Error(`SubOrder ${subOrderId} not found`);
       }
 
-      // 2. Vendor check
+      //  Vendor check
       if (subOrder.vendorId !== vendorId) {
-        throw new Error(
-          `Vendor mismatch for SubOrder ${subOrderId}`,
-        );
+        throw new Error(`Vendor mismatch for SubOrder ${subOrderId}`);
       }
 
-      // 3. Amount check
+      //  Amount check
       if (subOrder.vendorEarning !== amount) {
-        throw new Error(
-          `Payout amount mismatch for SubOrder ${subOrderId}`,
-        );
+        throw new Error(`Payout amount mismatch for SubOrder ${subOrderId}`);
       }
 
-      // 4. Atomic payout claim
+      // Atomic payout claim
       const payoutClaim = await tx.subOrder.updateMany({
         where: {
           id: subOrderId,
@@ -53,12 +54,21 @@ console.log("Processing payout for SubOrder:", subOrderId, "Vendor:", vendorId, 
 
       // Already processed
       if (payoutClaim.count === 0) {
-        console.log(
-          `Payout already processed for ${subOrderId}`,
-        );
+        console.log(`Payout already processed for ${subOrderId}`);
 
         return;
       }
+
+      //create payout recode
+      await tx.payout.create({
+        data: {
+          vendorId,
+          subOrderId,
+          amount,
+          status: PayoutStatus.PAID,
+          transactionId: randomUUID(),
+        },
+      });
 
       //  Update vendor balance
       await tx.vendor.update({
@@ -72,9 +82,7 @@ console.log("Processing payout for SubOrder:", subOrderId, "Vendor:", vendorId, 
         },
       });
 
-      console.log(
-        `Payout ${amount} added to vendor ${vendorId}`,
-      );
+      console.log(`Payout ${amount} added to vendor ${vendorId}`);
     });
   },
   {
@@ -87,8 +95,10 @@ payoutWorker.on("completed", (job) => {
 });
 
 payoutWorker.on("failed", (job, error) => {
-  console.error(
-    `Payout job ${job?.id} failed:`,
-    error,
-  );
+  console.error("❌ Payout job failed", {
+    jobId: job?.id,
+    subOrderId: job?.data?.subOrderId,
+    attempt: job?.attemptsMade,
+    error: error.message,
+  });
 });
