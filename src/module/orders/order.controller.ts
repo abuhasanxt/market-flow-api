@@ -63,9 +63,25 @@ const orderWithPayLater=catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const initiatePayment=catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user?.userId;
+  const orderId=req.params.id
+  const result = await orderService.initiatePayment(
+    userId, 
+    orderId as string
+  );
+
+  sendResponse(res, {
+    success: true,
+    httpStatusCode: status.CREATED,
+    message: "Payment Initiated Successfully",
+    data: result,
+  });
+});
 export const orderController = {
   createOrder,
   getAllOrder,
   getOrderById,
-  orderWithPayLater
+  orderWithPayLater,
+  initiatePayment
 };
