@@ -83,7 +83,11 @@ export const payoutWorker = new Worker(
       });
 
       console.log(`Payout ${amount} added to vendor ${vendorId}`);
-    });
+    },
+    {
+     maxWait: 10000,
+     timeout: 20000,
+  },);
   },
   {
     connection: redisConnection,
@@ -101,4 +105,8 @@ payoutWorker.on("failed", (job, error) => {
     attempt: job?.attemptsMade,
     error: error.message,
   });
+});
+
+payoutWorker.on("error", (error) => {
+  console.error("🔥 Payout worker error:", error);
 });

@@ -11,6 +11,7 @@ interface EnvConfig {
   JWT_ACCESS_EXPIRES_IN: string;
   JWT_REFRESH_SECRET: string;
   JWT_REFRESH_EXPIRES_IN: string;
+  FRONTEND_URL:string;
    EMAIL_SENDER: {
     SMTP_USER: string;
     SMTP_PASSWORD: string;
@@ -34,6 +35,7 @@ const loadEnvVariables = (): EnvConfig => {
     "JWT_ACCESS_SECRET",
     "JWT_REFRESH_SECRET",
     "JWT_REFRESH_EXPIRES_IN",
+    "FRONTEND_URL",
      "EMAIL_SENDER_SMTP_USER",
     "EMAIL_SENDER_SMTP_PASSWORD",
     "EMAIL_SENDER_SMTP_HOST",
@@ -60,6 +62,7 @@ const loadEnvVariables = (): EnvConfig => {
     JWT_ACCESS_EXPIRES_IN: process.env.JWT_ACCESS_EXPIRES_IN as string,
     JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET as string,
     JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN as string,
+    FRONTEND_URL:process.env.FRONTEND_URL as string,
     EMAIL_SENDER: {
       SMTP_USER: process.env.EMAIL_SENDER_SMTP_USER as string,
       SMTP_PASSWORD: process.env.EMAIL_SENDER_SMTP_PASSWORD as string,
