@@ -17,7 +17,6 @@ export const payoutQueue = new Queue("payout-queue", {
   },
 });
 
-console.log("payout.queue.ts");
 
 export const addPayoutJob = async (
   subOrderId: string,

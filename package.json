@@ -7,7 +7,7 @@
     "start": "node dist/server.js",
     "build": "tsc",
     "dev": "tsx watch src/server.ts",
-    "worker":"tsx watch src/worker.ts",
+    "worker": "tsx watch src/worker.ts",
     "lint": "eslint ./src/**/*",
     "stripe:webhook": "stripe listen --forward-to localhost:5000/webhook",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -33,6 +33,7 @@
     "http-status": "^2.1.0",
     "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.3",
+    "node-cron": "^4.6.0",
     "nodemailer": "^9.0.5",
     "pg": "^8.23.0",
     "redis": "^6.2.1",

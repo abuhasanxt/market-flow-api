@@ -620,11 +620,8 @@ const initiatePayment = async (userId: string, orderId: string) => {
       },
     },
   });
-   if (!orderData) {
-    throw new AppError(
-      status.NOT_FOUND,
-      "Order not found",
-    );
+  if (!orderData) {
+    throw new AppError(status.NOT_FOUND, "Order not found");
   }
 
   if (!orderData.payment) {
@@ -687,14 +684,95 @@ const initiatePayment = async (userId: string, orderId: string) => {
   });
   return {
     paymentUrl: session.url,
-    sessionId:session.id
+    sessionId: session.id,
   };
 };
 
+const cancelUnpaidOrders = async () => {
+  const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+  const unpaidOrders = await prisma.order.findMany({
+    where: {
+      createdAt: {
+        lte: thirtyMinutesAgo,
+      },
+      status: OrderStatus.PENDING,
+      payment: {
+        status: PaymentStatus.UNPAID,
+      },
+    },
+    select: {
+      id: true,
+      subOrders: {
+        select: {
+          items: {
+            select: {
+              productId: true,
+              quantity: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (unpaidOrders.length === 0) {
+    return;
+  }
+  for (const order of unpaidOrders) {
+    try {
+      await prisma.$transaction(async (tx) => {
+        const cancelledOrder = await tx.order.updateMany({
+          where: {
+            id: order.id,
+            status: OrderStatus.PENDING,
+            payment: {
+              status: PaymentStatus.UNPAID,
+            },
+          },
+          data: {
+            status: OrderStatus.CANCELLED,
+          },
+        });
+        if (cancelledOrder.count === 0) {
+          console.log(`Order ${order.id} already processed`);
+          return;
+        }
+
+        //  Restore product stock
+        for (const subOrder of order.subOrders) {
+          for (const item of subOrder.items) {
+            await tx.product.update({
+              where: {
+                id: item.productId,
+              },
+
+              data: {
+                stock: {
+                  increment: item.quantity,
+                },
+              },
+            });
+          }
+        }
+
+        await tx.payment.deleteMany({
+          where: {
+            orderId: order.id,
+          },
+        });
+
+        console.log(`Order ${order.id},cancelled and stock restore`);
+      });
+    } catch (error) {
+      console.error(`Failed to cancel order ${order.id}: `, error);
+    }
+  }
+};
 export const orderService = {
   createOrder,
   getAllOrder,
   getOrderById,
   orderWithPayLater,
-  initiatePayment
+  initiatePayment,
+  cancelUnpaidOrders,
 };
