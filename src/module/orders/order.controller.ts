@@ -47,8 +47,25 @@ const getOrderById = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
+
+const orderWithPayLater=catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user?.userId;
+  const result = await orderService.orderWithPayLater(
+    userId, 
+  );
+
+  sendResponse(res, {
+    success: true,
+    httpStatusCode: status.CREATED,
+    message: "Order create successfully with Pay Later option",
+    data: result,
+  });
+});
+
 export const orderController = {
   createOrder,
   getAllOrder,
-  getOrderById
+  getOrderById,
+  orderWithPayLater
 };
