@@ -14,68 +14,75 @@ const createReview = async (
 ) => {
   const { productId, subOrderId, rating, comment } = data;
 
-  //  Check product
-  const product = await prisma.product.findUnique({
-    where: {
-      id: productId,
-    },
-  });
+  const result = await prisma.$transaction(
 
-  if (!product) {
-    throw new AppError(status.NOT_FOUND, "Product not found");
-  }
+    async (tx) => {
+    //  Check product
+    const product = await tx.product.findUnique({
+      where: {
+        id: productId,
+      },
+    });
 
-  //  Check SubOrder
-  const subOrder = await prisma.subOrder.findUnique({
-    where: {
-      id: subOrderId,
-    },
-    include: {
-      items: true,
-    },
-  });
+    if (!product) {
+      throw new AppError(status.NOT_FOUND, "Product not found");
+    }
+    //  Check SubOrder
+    const subOrder = await tx.subOrder.findUnique({
+      where: {
+        id: subOrderId,
+      },
+      include: {
+        items: true,
+        order: true,
+      },
+    });
 
-  if (!subOrder) {
-    throw new AppError(status.NOT_FOUND, "SubOrder not found");
-  }
+    if (!subOrder) {
+      throw new AppError(status.NOT_FOUND, "SubOrder not found");
+    }
+    //  Verify SubOrder belongs to this buyer
+    if (subOrder.order.userId !== buyerId) {
+      throw new AppError(
+        status.FORBIDDEN,
+        "You are not allowed to review this order",
+      );
+    }
 
-  //  Check SubOrder is DELIVERED
-  if (subOrder.status !== SubOrderStatus.DELIVERED) {
-    throw new AppError(
-      status.BAD_REQUEST,
-      "You can review a product only after the order is delivered",
+    //  Check SubOrder is DELIVERED
+    if (subOrder.status !== SubOrderStatus.DELIVERED) {
+      throw new AppError(
+        status.BAD_REQUEST,
+        "You can review a product only after the order is delivered",
+      );
+    }
+    //  Verify product was purchased in this SubOrder
+    const purchasedProduct = subOrder.items.some(
+      (item) => item.productId === productId,
     );
-  }
 
-  //  Verify product was purchased in this SubOrder
-  const purchasedProduct = subOrder.items.some(
-    (item) => item.productId === productId,
-  );
+    if (!purchasedProduct) {
+      throw new AppError(
+        status.FORBIDDEN,
+        "You did not purchase this product in this sub-order",
+      );
+    }
+    //  Check duplicate review
+    const existingReview = await tx.review.findFirst({
+      where: {
+        buyerId,
+        productId,
+      },
+    });
 
-  if (!purchasedProduct) {
-    throw new AppError(
-      status.FORBIDDEN,
-      "You did not purchase this product in this sub-order",
-    );
-  }
+    if (existingReview) {
+      throw new AppError(
+        status.CONFLICT,
+        "You have already reviewed this product",
+      );
+    }
 
-  //  Check duplicate review
-  const existingReview = await prisma.review.findFirst({
-    where: {
-      buyerId,
-      productId,
-    },
-  });
-
-  if (existingReview) {
-    throw new AppError(
-      status.CONFLICT,
-      "You have already reviewed this product",
-    );
-  }
-
-  //  Create review+ update product rating
-  const result = await prisma.$transaction(async (tx) => {
+    //  Create review
     const review = await tx.review.create({
       data: {
         buyerId,
@@ -85,26 +92,40 @@ const createReview = async (
         comment,
       },
     });
-    const newRatingCount = product.ratingCount + 1;
-    const newRatingAvg =
-      (product.ratingAvg * product.ratingCount + rating) / newRatingCount;
+    //  Calculate rating from Review table
+    const ratingData = await tx.review.aggregate({
+      where: {
+        productId,
+      },
+      _avg: {
+        rating: true,
+      },
+      _count: {
+        rating: true,
+      },
+    });
+    const ratingAvg = ratingData._avg.rating ?? 0;
+    const ratingCount = ratingData._count.rating;
 
+    //  Update Product rating
     const updatedProduct = await tx.product.update({
       where: {
         id: productId,
       },
       data: {
-        ratingCount: {
-          increment: 1,
-        },
-        ratingAvg: newRatingAvg,
+        ratingAvg: Number(ratingAvg.toFixed(2)),
+        ratingCount,
       },
     });
     return {
       review,
       product: updatedProduct,
     };
-  });
+  },{
+    maxWait:10000,
+    timeout:10000
+  }
+);
 
   return result;
 };
@@ -127,6 +148,8 @@ const getProductIdByReview = async (productId: string) => {
   });
   return review;
 };
+
+// const updateReview=async()
 export const reviewService = {
   createReview,
   getProductIdByReview,
