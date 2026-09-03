@@ -154,7 +154,6 @@ const getAllProduct = async (query: ProductQuery) => {
   };
 };
 
-
 const getProductById = async (id: string) => {
   const result = await prisma.product.findFirst({
     where: {
@@ -162,24 +161,35 @@ const getProductById = async (id: string) => {
     },
     include: {
       category: {
-        select:{
-          name:true
-        }
+        select: {
+          name: true,
+        },
       },
-      vendor:{
-        select:{
-          id:true,
-          storeName:true,
-          status:true,
-          user:{
-            select:{
-              name:true,
-              email:true,
-              emailVerified:true,
-              role:true
-            }
-          }
-        }
+      reviews: {
+        select: {
+          buyer: {
+            select: {
+              name: true,
+            },
+          },
+          comment: true,
+          rating: true,
+        },
+      },
+      vendor: {
+        select: {
+          id: true,
+          storeName: true,
+          status: true,
+          user: {
+            select: {
+              name: true,
+              email: true,
+              emailVerified: true,
+              role: true,
+            },
+          },
+        },
       },
     },
   });
@@ -188,7 +198,6 @@ const getProductById = async (id: string) => {
   }
   return result;
 };
-
 
 const getMyProduct = async (userId: string) => {
   const vendor = await prisma.vendor.findUnique({
@@ -215,8 +224,6 @@ const getMyProduct = async (userId: string) => {
 
   return result;
 };
-
-
 
 const updateProduct = async (
   userId: string,
@@ -259,14 +266,11 @@ const updateProduct = async (
 
   //  Check whether data actually changed
   const isSame =
-    (payload.name === undefined ||
-      payload.name === existingProduct.name) &&
+    (payload.name === undefined || payload.name === existingProduct.name) &&
     (payload.description === undefined ||
       payload.description === existingProduct.description) &&
-    (payload.price === undefined ||
-      payload.price === existingProduct.price) &&
-    (payload.stock === undefined ||
-      payload.stock === existingProduct.stock) &&
+    (payload.price === undefined || payload.price === existingProduct.price) &&
+    (payload.stock === undefined || payload.stock === existingProduct.stock) &&
     (payload.imageUrl === undefined ||
       payload.imageUrl === existingProduct.imageUrl) &&
     (payload.isActive === undefined ||
@@ -292,7 +296,6 @@ const updateProduct = async (
     data: payload,
   });
 
-
   // Delete old image from Cloudinary
   if (isNewImageUploaded && existingProduct.imageUrl) {
     try {
@@ -305,9 +308,7 @@ const updateProduct = async (
   return result;
 };
 
-
-const deleteProduct=async(userId:string,id:string)=>{
-      
+const deleteProduct = async (userId: string, id: string) => {
   //  Find vendor by authenticated user
   const vendor = await prisma.vendor.findUnique({
     where: {
@@ -333,12 +334,12 @@ const deleteProduct=async(userId:string,id:string)=>{
       "Product not found or you are not the owner",
     );
   }
-//  delete only owner's product
+  //  delete only owner's product
   await prisma.product.delete({
-    where:{
-       id:existingProduct.id
-    }
-  })
+    where: {
+      id: existingProduct.id,
+    },
+  });
 
   // Delete product image from Cloudinary
   if (existingProduct.imageUrl) {
@@ -350,12 +351,12 @@ const deleteProduct=async(userId:string,id:string)=>{
   }
 
   return { message: "Product deleted successfully" };
-}
+};
 export const productServices = {
   createProduct,
   getAllProduct,
   getProductById,
   getMyProduct,
   updateProduct,
-  deleteProduct
+  deleteProduct,
 };

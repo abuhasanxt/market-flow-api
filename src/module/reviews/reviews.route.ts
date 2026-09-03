@@ -15,4 +15,6 @@ router.post(
   reviewController.createReview,
 );
 
+router.get("/:id",checkAuth(Role.BUYER,Role.SELLER),reviewController.getProductIdByReview)
+
 export const reviewRoutes = router;

@@ -99,6 +99,26 @@ const createReview = async (
   return review;
 };
 
+const getProductIdByReview=async(productId:string)=>{
+  const review=await prisma.review.findMany({
+    where:{
+      productId
+    },
+    select:{
+      buyer:{
+        select:{
+          name:true,
+          email:true
+        }
+      },
+      comment:true,
+      rating:true
+    },
+    
+  })
+  return review
+}
 export const reviewService = {
   createReview,
+  getProductIdByReview
 };

@@ -22,7 +22,21 @@ const createReview = catchAsync(
     });
   },
 );
+const getProductIdByReview = catchAsync(
+  async (req: Request, res: Response) => {
+    const { productId } = req.params;
 
+    const result = await reviewService.getProductIdByReview(productId as string);
+
+    sendResponse(res, {
+      success: true,
+      httpStatusCode: status.CREATED,
+      message: "Review retrieved successfully.",
+      data: result,
+    });
+  },
+);
 export const reviewController = {
   createReview,
+  getProductIdByReview
 };
