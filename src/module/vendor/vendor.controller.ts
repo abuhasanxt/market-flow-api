@@ -33,11 +33,25 @@ const getMyBalance=catchAsync(async(req:Request,res:Response)=>{
 
     })
 })
+const getMyPayouts = catchAsync(
+  async (req: Request, res: Response) => {
+    const userId = req.user.userId;
 
+    const result = await vendorServices.getMyPayouts(userId);
+
+    sendResponse(res, {
+      success: true,
+      httpStatusCode: status.OK,
+      message: "Get my payout history successfully.",
+      data: result,
+    });
+  },
+);
 
 
 
 export const vendorController={
     applyAsSeller,
-    getMyBalance
+    getMyBalance,
+    getMyPayouts
 }

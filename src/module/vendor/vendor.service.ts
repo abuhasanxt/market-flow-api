@@ -68,8 +68,42 @@ if (!vendor) {
  
 return vendor
 }
+const getMyPayouts = async (userId: string) => {
+  const vendor = await prisma.vendor.findUnique({
+    where: {
+      userId,
+    },
+  });
 
+  if (!vendor) {
+    throw new AppError(status.NOT_FOUND, "Vendor not found");
+  }
+
+  const payouts = await prisma.payout.findMany({
+    where: {
+      vendorId: vendor.id,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    include: {
+      subOrder: {
+        select: {
+          id: true,
+          orderId: true,
+          subtotal: true,
+          vendorEarning: true,
+          status: true,
+          createdAt: true,
+        },
+      },
+    },
+  });
+
+  return payouts;
+};
 export const vendorServices={
     applyAsSeller,
-    getMyBalance
+    getMyBalance,
+    getMyPayouts
 }
