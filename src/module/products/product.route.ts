@@ -4,16 +4,18 @@ import { createProductZodSchema, updateProductZodSchema } from "./product.valida
 import { checkAuth } from "../../middleware/checkAuth";
 import { Role } from "../../../generated/prisma/enums";
 import { productController } from "./product.controller";
+import { multerUpload } from "../../config/multer.config";
 
 const router = express.Router();
 
 router.post(
-  "/",
+  "/",checkAuth(Role.SELLER),multerUpload.single("imageUrl"),
   validateRequest(createProductZodSchema),
-  checkAuth(Role.SELLER),
+  
   productController.createProduct,
 );
-router.patch("/:id",validateRequest(updateProductZodSchema),checkAuth(Role.SELLER),productController.updateProduct)
+router.patch("/:id",checkAuth(Role.SELLER),
+  validateRequest(updateProductZodSchema),productController.updateProduct)
 
 router.delete("/:id",checkAuth(Role.SELLER),productController.deleteProduct)
 

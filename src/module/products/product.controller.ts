@@ -12,8 +12,11 @@ const createProduct = catchAsync(async (req: Request, res: Response) => {
   if (!userId) {
     throw new AppError(status.UNAUTHORIZED, "You are unauthorized");
   }
-
-  const result = await productServices.createProduct(userId, req.body);
+const payload={
+  ...req.body,
+  imageUrl:req.file?.path
+}
+  const result = await productServices.createProduct(userId, payload);
 
   sendResponse(res, {
     success: true,
