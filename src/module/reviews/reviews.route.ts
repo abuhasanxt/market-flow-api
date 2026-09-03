@@ -2,7 +2,7 @@ import express from "express";
 import { checkAuth } from "../../middleware/checkAuth";
 import { Role } from "../../../generated/prisma/enums";
 import { validateRequest } from "../../middleware/valideRequest";
-import { createReviewSchema } from "./reviews.validation";
+import { createReviewSchema, updateReviewSchema } from "./reviews.validation";
 import { reviewController } from "./reviews.controller";
 
 
@@ -14,7 +14,7 @@ router.post(
   validateRequest(createReviewSchema),
   reviewController.createReview,
 );
-
+router.patch("/:reviewId",checkAuth(Role.BUYER),validateRequest(updateReviewSchema),reviewController.updateReview)
 router.get("/:id",checkAuth(Role.BUYER,Role.SELLER),reviewController.getProductIdByReview)
 
 export const reviewRoutes = router;

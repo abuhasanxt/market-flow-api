@@ -30,13 +30,30 @@ const getProductIdByReview = catchAsync(
 
     sendResponse(res, {
       success: true,
-      httpStatusCode: status.CREATED,
+      httpStatusCode: status.OK,
       message: "Review retrieved successfully.",
+      data: result,
+    });
+  },
+);
+
+const updateReview = catchAsync(
+  async (req: Request, res: Response) => {
+    const { reviewId } = req.params;
+    const buyerId=req.user.userId
+
+    const result = await reviewService.updateReview(buyerId, reviewId as string,req.body);
+
+    sendResponse(res, {
+      success: true,
+      httpStatusCode: status.OK,
+      message: "Review update successfully.",
       data: result,
     });
   },
 );
 export const reviewController = {
   createReview,
-  getProductIdByReview
+  getProductIdByReview,
+  updateReview
 };
