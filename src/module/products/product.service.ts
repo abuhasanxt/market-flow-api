@@ -5,7 +5,7 @@ import { prisma } from "../../lib/prisma";
 import { ProductData, ProductQuery, ProductUpdate } from "./product.interface";
 import { deleteFileFromCloudinary } from "../../config/cloudinary";
 import { redisService } from "../../lib/redis";
-
+import { Prisma } from "../../../generated/prisma/client";
 const createProduct = async (
   userId: string,
   payload: Omit<ProductData, "id" | "createdAt" | "updatedAt">,
@@ -44,7 +44,8 @@ const createProduct = async (
       vendorId: vendor.id,
     },
   });
-
+await redisService.deleteByPattern("products:*")
+await redisService.delete(`vendor-products:${vendor.id}`);
   return result;
 };
 
@@ -218,7 +219,52 @@ const getAllProduct = async (query: ProductQuery) => {
   return result;
 };
 
+
+type ProductDetails = Prisma.ProductGetPayload<{
+  include: {
+    category: {
+      select: {
+        name: true;
+      };
+    };
+    reviews: {
+      select: {
+        buyer: {
+          select: {
+            name: true;
+          };
+        };
+        comment: true;
+        rating: true;
+      };
+    };
+    vendor: {
+      select: {
+        id: true;
+        storeName: true;
+        status: true;
+        user: {
+          select: {
+            name: true;
+            email: true;
+            emailVerified: true;
+            role: true;
+          };
+        };
+      };
+    };
+  };
+}>;
 const getProductById = async (id: string) => {
+
+   const cacheKey = `product:${id}`;
+
+  // Check Redis
+  const cachedProduct = await redisService.get<ProductDetails>(cacheKey);
+  if (cachedProduct) {
+    console.log("Product fetched from Redis");
+    return cachedProduct;
+  }
   const result = await prisma.product.findFirst({
     where: {
       id,
@@ -260,6 +306,12 @@ const getProductById = async (id: string) => {
   if (!result) {
     throw new AppError(status.NOT_FOUND, "Product not found");
   }
+  // Save Redis
+  await redisService.set(
+    cacheKey,
+    result,
+    300, // 5 minutes
+  );
   return result;
 };
 
@@ -273,7 +325,14 @@ const getMyProduct = async (userId: string) => {
   if (!vendor) {
     throw new AppError(status.NOT_FOUND, "Vendor not found");
   }
+  const cacheKey = `vendor-products:${vendor.id}`;
+// Check Redis
+  const cachedProducts = await redisService.get(cacheKey);
 
+  if (cachedProducts) {
+    console.log("My products fetched from Redis");
+    return cachedProducts;
+  }
   const result = await prisma.product.findMany({
     where: {
       vendorId: vendor.id,
@@ -285,7 +344,8 @@ const getMyProduct = async (userId: string) => {
       createdAt: "desc",
     },
   });
-
+// Save Redis
+  await redisService.set(cacheKey, result, 300);
   return result;
 };
 
@@ -368,7 +428,9 @@ const updateProduct = async (
       console.error("Old image deletion failed:", error);
     }
   }
-
+await redisService.delete(`product:${id}`);
+await redisService.delete(`vendor-products:${vendor.id}`);
+await redisService.deleteByPattern("products:*");
   return result;
 };
 
@@ -413,7 +475,10 @@ const deleteProduct = async (userId: string, id: string) => {
       console.error("Failed to delete product image from Cloudinary:", error);
     }
   }
-
+// Invalidate Redis cache
+await redisService.delete(`product:${id}`);
+await redisService.delete(`vendor-products:${vendor.id}`);
+await redisService.deleteByPattern("products:*");
   return { message: "Product deleted successfully" };
 };
 export const productServices = {

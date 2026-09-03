@@ -93,6 +93,23 @@ class RedisService {
       console.log("Redis DELETE Error", error);
     }
   }
+async deleteByPattern(pattern: string): Promise<void> {
+  try {
+    const client = this.ensureConnection();
+
+    for await (const keys of client.scanIterator({
+      MATCH: pattern,
+      COUNT: 100,
+    })) {
+      for (const key of keys) {
+        console.log("Delete Redis key:",key);
+        await client.del(key);
+      }
+    }
+  } catch (error) {
+    console.error("Redis DELETE BY PATTERN Error:", error);
+  }
+}
 
   async isAvailable(): Promise<boolean> {
     try {
