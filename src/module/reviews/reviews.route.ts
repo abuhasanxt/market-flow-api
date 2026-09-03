@@ -16,5 +16,6 @@ router.post(
 );
 router.patch("/:reviewId",checkAuth(Role.BUYER),validateRequest(updateReviewSchema),reviewController.updateReview)
 router.get("/:id",checkAuth(Role.BUYER,Role.SELLER),reviewController.getProductIdByReview)
+router.delete("/:reviewId",checkAuth(Role.BUYER,Role.SELLER),reviewController.deleteReview)
 
 export const reviewRoutes = router;

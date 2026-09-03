@@ -52,8 +52,27 @@ const updateReview = catchAsync(
     });
   },
 );
+const deleteReview = catchAsync(
+  async (req: Request, res: Response) => {
+    const userId = req.user.userId;
+    const {  reviewId } = req.params;
+
+    const result = await reviewService.deleteReview(
+      userId,
+      reviewId as string,
+    );
+
+    sendResponse(res, {
+      success: true,
+      httpStatusCode: status.OK,
+      message: result.message
+      
+    });
+  },
+);
 export const reviewController = {
   createReview,
   getProductIdByReview,
-  updateReview
+  updateReview,
+  deleteReview
 };

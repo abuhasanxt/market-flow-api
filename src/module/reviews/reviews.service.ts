@@ -226,8 +226,107 @@ const updateReview = async (
   });
   return result;
 };
+
+const deleteReview = async (
+  userId: string,
+  reviewId: string,
+) => {
+  //  Find review
+  const review = await prisma.review.findUnique({
+    where: {
+      id: reviewId,
+    },
+  });
+
+  if (!review) {
+    throw new AppError(
+      status.NOT_FOUND,
+      "Review not found",
+    );
+  }
+
+  //  Buyer can delete own review
+  const isBuyer = review.buyerId === userId;
+
+  //  Check vendor
+  const vendor = await prisma.vendor.findUnique({
+    where: {
+      userId,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  let isSeller = false;
+
+  if (vendor) {
+    const product = await prisma.product.findUnique({
+      where: {
+        id: review.productId,
+      },
+      select: {
+        vendorId: true,
+      },
+    });
+
+    if (product?.vendorId === vendor.id) {
+      isSeller = true;
+    }
+  }
+
+  //  Permission check
+  if (!isBuyer && !isSeller) {
+    throw new AppError(
+      status.FORBIDDEN,
+      "You are not allowed to delete this review",
+    );
+  }
+
+  //  Delete review + update product rating
+   await prisma.$transaction(async (tx) => {
+    const deletedReview = await tx.review.delete({
+      where: {
+        id: reviewId,
+      },
+    });
+
+    // Recalculate rating from remaining reviews
+    const ratingData = await tx.review.aggregate({
+      where: {
+        productId: review.productId,
+      },
+      _avg: {
+        rating: true,
+      },
+      _count: {
+        rating: true,
+      },
+    });
+
+    const ratingAvg = ratingData._avg.rating ?? 0;
+    const ratingCount = ratingData._count.rating;
+
+    await tx.product.update({
+      where: {
+        id: review.productId,
+      },
+      data: {
+        ratingAvg: Number(ratingAvg.toFixed(2)),
+        ratingCount,
+      },
+    });
+
+    return deletedReview;
+  });
+
+  return {message:"Review deleted successfully"};
+};
+
+
 export const reviewService = {
   createReview,
   getProductIdByReview,
   updateReview,
+  deleteReview
 };
