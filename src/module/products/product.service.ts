@@ -4,6 +4,7 @@ import AppError from "../../errorHelpers/AppError";
 import { prisma } from "../../lib/prisma";
 import { ProductData, ProductQuery, ProductUpdate } from "./product.interface";
 import { deleteFileFromCloudinary } from "../../config/cloudinary";
+import { redisService } from "../../lib/redis";
 
 const createProduct = async (
   userId: string,
@@ -63,6 +64,30 @@ const getAllProduct = async (query: ProductQuery) => {
 
   const pageNumber = Number(page);
   const limitNumber = Number(limit);
+   // Validate sorting
+  const allowedSortFields = [
+    "createdAt",
+    "updatedAt",
+    "price",
+    "name",
+    "ratingAvg",
+    "ratingCount",
+    "stock",
+  ];
+
+  if (!allowedSortFields.includes(sort)) {
+    throw new AppError(
+      status.BAD_REQUEST,
+      "Invalid sort field",
+    );
+  }
+
+  if (order !== "asc" && order !== "desc") {
+    throw new AppError(
+      status.BAD_REQUEST,
+      "Order must be asc or desc",
+    );
+  }
 
   const where: any = {};
 
@@ -121,6 +146,37 @@ const getAllProduct = async (query: ProductQuery) => {
   // pagination
   const skip = (pageNumber - 1) * limitNumber;
 
+
+  // Redis cache key
+  const cacheKey = `products:${JSON.stringify({
+    categoryId,
+    vendorId,
+    minPrice,
+    maxPrice,
+    inStock,
+    q: q?.trim(),
+    sort,
+    order,
+    page: pageNumber,
+    limit: limitNumber,
+  })}`;
+   // Check Redis
+   const cachedData = await redisService.get<{
+    products: any[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  }>(cacheKey);
+
+   if (cachedData) {
+    console.log("Products fetched from Redis");
+
+    return cachedData;
+  }
+   // Database query
   const [products, total] = await Promise.all([
     prisma.product.findMany({
       where,
@@ -142,8 +198,8 @@ const getAllProduct = async (query: ProductQuery) => {
   if (products.length === 0) {
     throw new AppError(status.NOT_FOUND, "Product not found");
   }
-
-  return {
+// Response
+  const result = {
     products,
     pagination: {
       page: pageNumber,
@@ -152,6 +208,14 @@ const getAllProduct = async (query: ProductQuery) => {
       totalPages: Math.ceil(total / limitNumber),
     },
   };
+    // Save in Redis
+  await redisService.set(
+    cacheKey,
+    result,
+    300, // 5 minutes
+  );
+
+  return result;
 };
 
 const getProductById = async (id: string) => {

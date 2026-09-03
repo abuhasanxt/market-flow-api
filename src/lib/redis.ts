@@ -52,15 +52,22 @@ class RedisService {
     return this.client;
   }
 
-  async get(key: string): Promise<string | null> {
-    try {
-      const client = this.ensureConnection();
-      return await client.get(key);
-    } catch (error) {
-      console.error("Redis Get Error: ", error);
+  async get<T>(key: string): Promise<T | null> {
+  try {
+    const client = this.ensureConnection();
+
+    const value = await client.get(key);
+
+    if (!value) {
       return null;
     }
+
+    return JSON.parse(value) as T;
+  } catch (error) {
+    console.error("Redis GET Error:", error);
+    return null;
   }
+}
 
   async set(key: string, value: any, ttlInSeconds: number): Promise<void> {
     try {
