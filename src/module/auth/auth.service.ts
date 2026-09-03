@@ -15,6 +15,7 @@ import { sendEmail } from "../../utils/email";
 import { jwtUtils } from "../../utils/jwt";
 import { envVars } from "../../config/env";
 import { JwtPayload } from "jsonwebtoken";
+import { deleteFileFromCloudinary } from "../../config/cloudinary";
 
 const registerBuyer = async (payload: UserData) => {
   const { name, email, password } = payload;
@@ -298,7 +299,9 @@ const updateMe = async (userId: string, payload: UpdateUser) => {
   if (payload.name !== undefined) {
     updateData.name = payload.name;
   }
-
+  if (payload.image) {
+    updateData.image=payload.image
+  }
   if (Object.keys(payload).length === 0) {
     throw new AppError(
       status.BAD_REQUEST,
@@ -316,12 +319,27 @@ const updateMe = async (userId: string, payload: UpdateUser) => {
       "Your provided data is already up to date",
     );
   }
+
+  // Check whether new image is uploaded
+  const isNewImageUploaded =
+    updateData.image !== undefined &&
+    updateData.image !== user.image;
+
   const result = await prisma.user.update({
     where: {
       id: userId,
     },
     data: updateData,
   });
+
+    // Delete old image from Cloudinary
+  if (isNewImageUploaded && user.image) {
+    try {
+      await deleteFileFromCloudinary(user.image);
+    } catch (error) {
+      console.error("Old image deletion failed:", error);
+    }
+  }
 const { passwordHash: _, ...safeUser } = result;
   return safeUser;
 };

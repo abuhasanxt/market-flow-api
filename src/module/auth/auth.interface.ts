@@ -18,4 +18,5 @@ otp:string
 
 export  interface UpdateUser{
     name?:string
+    image?:string
 }

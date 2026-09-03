@@ -104,8 +104,11 @@ const updateMe=catchAsync(async(req:Request,res:Response)=>{
   if (!userId) {
     throw new AppError(status.UNAUTHORIZED,"You are unauthorized")
   }
-
-  const result=await authService.updateMe(userId,req.body)
+const payload={
+  ...req.body,
+  image:req.file?.path
+}
+  const result=await authService.updateMe(userId,payload)
 
   sendResponse(res,{
     success:true,
