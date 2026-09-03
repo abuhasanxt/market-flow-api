@@ -361,7 +361,17 @@ const deleteMe=async(userId:string)=>{
       id:userId
     }
   })
-  return result
+
+ // Delete product image from Cloudinary
+  if (user.image) {
+    try {
+      await deleteFileFromCloudinary(user.image);
+    } catch (error) {
+      console.error("Failed to delete your profile photo from Cloudinary:", error);
+    }
+  }
+
+  return { message: " Deleted your profile successfully" };
 }
 export const authService = {
   registerBuyer,
