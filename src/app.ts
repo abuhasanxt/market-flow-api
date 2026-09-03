@@ -7,6 +7,8 @@ import { notFound } from "./middleware/notFound";
 import { paymentController } from "./module/payment/payment.controller";
 import cron from "node-cron"
 import { orderService } from "./module/orders/order.service";
+import { envVars } from "./config/env";
+import cors from 'cors';
 const app: Application = express();
 
 
@@ -15,7 +17,12 @@ app.post("/webhook", express.raw({type:"application/json"}),
 paymentController.handlerStripeWebhookEvent
   
 )
-
+app.use(cors({
+  origin:[envVars.FRONTEND_URL,envVars.BACKEND_URL],
+  credentials:true,
+  methods:["GET","POST","PUT","PATCH","DELETE"],
+  allowedHeaders:["Content-Type","Authorization"]
+}))
 
 // Enable URL-encoded form data parsing
 app.use(express.urlencoded({ extended: true }));

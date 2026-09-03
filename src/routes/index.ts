@@ -7,6 +7,7 @@ import { productRoutes } from "../module/products/product.route"
 import { cartRoutes } from "../module/cart/cart.route"
 import { orderRoutes } from "../module/orders/order.route"
 import { reviewRoutes } from "../module/reviews/reviews.route"
+import { googleLoginRoutes } from "../module/auth/googleLogin.route"
 
 const router=express.Router()
 router.use("/categories",categoriesRoutes)
@@ -17,4 +18,5 @@ router.use("/products",productRoutes)
 router.use("/cart",cartRoutes)
 router.use("/orders",orderRoutes)
 router.use("/reviews", reviewRoutes);
+router.use("/api/auth",googleLoginRoutes)
 export const IndexRoute=router

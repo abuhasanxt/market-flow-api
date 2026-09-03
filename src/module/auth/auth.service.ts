@@ -16,6 +16,8 @@ import { jwtUtils } from "../../utils/jwt";
 import { envVars } from "../../config/env";
 import { JwtPayload } from "jsonwebtoken";
 import { deleteFileFromCloudinary } from "../../config/cloudinary";
+import axios from "axios";
+import crypto from "crypto";
 
 const registerBuyer = async (payload: UserData) => {
   const { name, email, password } = payload;
@@ -388,6 +390,157 @@ const deleteMe=async(userId:string)=>{
 
   return { message: " Deleted your profile successfully" };
 }
+
+
+
+const googleLogin = () => {
+  const state = crypto.randomBytes(32).toString("hex");
+
+  const params = new URLSearchParams({
+    client_id: envVars.GOOGLE_CLIENT_ID,
+    redirect_uri: envVars.GOOGLE_CALLBACK_URL,
+    response_type: "code",
+    scope: "openid email profile",
+    access_type: "offline",
+    prompt: "select_account",
+    state,
+  });
+
+  const googleAuthUrl =
+    `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+
+  return {
+    googleAuthUrl,
+    state,
+  };
+};
+
+const googleCallback = async (code: string) => {
+  //  Authorization Code → Google Access Token
+  let googleAccessToken: string;
+
+  try {
+    const tokenResponse = await axios.post(
+      "https://oauth2.googleapis.com/token",
+      {
+        code,
+        client_id: envVars.GOOGLE_CLIENT_ID,
+        client_secret: envVars.GOOGLE_CLIENT_SECRET,
+        redirect_uri: envVars.GOOGLE_CALLBACK_URL,
+        grant_type: "authorization_code",
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    googleAccessToken = tokenResponse.data.access_token;
+  } catch (error) {
+    console.error("Google Token Error:", error);
+
+    throw new AppError(
+      status.UNAUTHORIZED,
+      "Failed to get Google access token",
+    );
+  }
+
+  if (!googleAccessToken) {
+    throw new AppError(
+      status.UNAUTHORIZED,
+      "Google access token not received",
+    );
+  }
+
+  //  Google Access Token → Google User Info
+
+  let googleUser;
+
+  try {
+    const userResponse = await axios.get(
+      "https://www.googleapis.com/oauth2/v2/userinfo",
+      {
+        headers: {
+          Authorization: `Bearer ${googleAccessToken}`,
+        },
+      },
+    );
+
+    googleUser = userResponse.data;
+  } catch (error) {
+    console.error("Google User Info Error:", error);
+
+    throw new AppError(
+      status.UNAUTHORIZED,
+      "Failed to get Google user information",
+    );
+  }
+
+  //  Validate Google User
+  if (!googleUser.email) {
+    throw new AppError(
+      status.BAD_REQUEST,
+      "Google account email not found",
+    );
+  }
+
+  //  Find Existing User
+  let user = await prisma.user.findUnique({
+    where: {
+      email: googleUser.email,
+    },
+  });
+
+  // Create User if Doesn't Exist
+
+  if (!user) {
+    const randomPassword = crypto.randomBytes(32).toString("hex");
+
+    const passwordHash = await bcrypt.hash(
+      randomPassword,
+      12,
+    );
+
+    user = await prisma.user.create({
+      data: {
+        name: googleUser.name,
+        email: googleUser.email,
+        image: googleUser.picture,
+        emailVerified: googleUser.verified_email ?? false,
+        passwordHash,
+      },
+    });
+  }
+
+  //  Generate YOUR Access Token
+  const accessToken = tokenUtils.getAccessToken({
+    userId: user.id,
+    role: user.role,
+    email: user.email,
+  });
+
+  // Generate YOUR Refresh Token
+  const refreshToken = tokenUtils.getRefreshToken({
+    userId: user.id,
+    role: user.role,
+    email: user.email,
+  });
+
+  // Return
+  return {
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      image: user.image,
+      role: user.role,
+      emailVerified: user.emailVerified,
+    },
+    accessToken,
+    refreshToken,
+  };
+};
 export const authService = {
   registerBuyer,
   loginUser,
@@ -396,5 +549,7 @@ export const authService = {
   getNewToken,
   logoutUser,
   updateMe,
-  deleteMe
+  deleteMe,
+  googleLogin,
+  googleCallback
 };
