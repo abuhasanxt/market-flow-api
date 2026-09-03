@@ -224,8 +224,23 @@ const verifyEmail = async (payload: VerifyEmailData) => {
       },
     }),
   ]);
-
+const accessToken = tokenUtils.getAccessToken({
+    userId: user.id,
+    role: user.role,
+    name: user.name,
+    email: user.email,
+    emailVerified: user.emailVerified,
+  });
+  const refreshToken = tokenUtils.getRefreshToken({
+    userId: user.id,
+    role: user.role,
+    name: user.name,
+    email: user.email,
+    emailVerified: user.emailVerified,
+  });
   return {
+    accessToken,
+    refreshToken,
     message: "Email verified successfully.",
   };
 };
