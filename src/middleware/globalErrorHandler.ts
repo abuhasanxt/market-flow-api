@@ -4,23 +4,31 @@ import { NextFunction, Request, Response } from "express";
 import { Prisma } from "../../generated/prisma/client";
 import { envVars } from "../config/env";
 import status from "http-status";
-import z from "zod";
+import z, { file } from "zod";
 import { TErrorResponse, TErrorSources } from "../interface/error.interface";
 import { handleZodError } from "../errorHelpers/handleZodError";
 import AppError from "../errorHelpers/AppError";
+import { deleteFileFromCloudinary } from "../config/cloudinary";
 
-
-export const errorHandler=async(
+export const errorHandler = async (
   err: any,
   req: Request,
   res: Response,
   next: NextFunction,
-)=> {
+) => {
   if (envVars.NODE_ENV === "development") {
     console.log("Error from Global Error Handler: ", err);
   }
 
-  
+  if (req.file) {
+    await deleteFileFromCloudinary(req.file?.path);
+  }
+
+  if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+    const imageUrls = req.files.map((file) => file.path);
+
+    await Promise.all(imageUrls.map((url) => deleteFileFromCloudinary(url)));
+  }
   let errorSources: TErrorSources[] = [];
   let statusCode: number = status.INTERNAL_SERVER_ERROR;
   let errorMessage: string = "internal server error";
@@ -33,7 +41,7 @@ export const errorHandler=async(
     statusCode = simplifiedError.statusCode as number;
     errorMessage = simplifiedError.errorMessage;
     errorSources = [...simplifiedError.errorSources];
-    stack=err.stack
+    stack = err.stack;
   }
   //prismaClientValidationError
   else if (err instanceof Prisma.PrismaClientValidationError) {
@@ -74,28 +82,26 @@ export const errorHandler=async(
       statusCode = status.SERVICE_UNAVAILABLE;
       errorMessage = "Can't reach database server !";
     }
-  }else if (err instanceof AppError) {
-    statusCode=err.statusCode;
-    errorMessage=err.message;
-    stack=err.stack;
-    errorSources=[
+  } else if (err instanceof AppError) {
+    statusCode = err.statusCode;
+    errorMessage = err.message;
+    stack = err.stack;
+    errorSources = [
       {
-        path:``,
-        message:err.message
-      }
-    ]
-  }
-
-   else if (err instanceof Error) {
+        path: ``,
+        message: err.message,
+      },
+    ];
+  } else if (err instanceof Error) {
     statusCode = status.INTERNAL_SERVER_ERROR;
     errorMessage = err.message;
     stack = err.stack;
-    errorSources=[
+    errorSources = [
       {
-        path:``,
-        message:err.message
-      }
-    ]
+        path: ``,
+        message: err.message,
+      },
+    ];
   }
 
   const errorResponse: TErrorResponse = {
@@ -107,4 +113,4 @@ export const errorHandler=async(
   };
 
   res.status(statusCode).json(errorResponse);
-}
+};

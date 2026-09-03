@@ -45,8 +45,8 @@ export const uploadFileToCLoudinary = async (
       .upload_stream(
         {
           resource_type: "auto",
-          public_id: `shop-flow/${folder}/${uniqueName}`,
-          folder: `shop-flow/${folder}`,
+          public_id: `market-flow/${folder}/${uniqueName}`,
+          folder: `market-flow/${folder}`,
         },
         (error, result) => {
           if (error) {
