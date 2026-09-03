@@ -19,8 +19,25 @@ const applyAsSeller=catchAsync(async(req:Request,res:Response)=>{
     })
 })
 
+const getMyBalance=catchAsync(async(req:Request,res:Response)=>{
+
+    const userId=req.user.userId
+
+    const result=await vendorServices.getMyBalance(userId)
+
+    sendResponse(res,{
+        success:true,
+        httpStatusCode:status.OK,
+        message:"Get my balance .",
+        data:result
+
+    })
+})
+
+
 
 
 export const vendorController={
-    applyAsSeller
+    applyAsSeller,
+    getMyBalance
 }

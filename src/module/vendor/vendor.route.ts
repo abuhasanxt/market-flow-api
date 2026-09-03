@@ -8,7 +8,8 @@ import { applyAsSellerZodSchema } from "./vendor.validation"
 
 const router=express.Router()
 
-router.post("/apply",validateRequest(applyAsSellerZodSchema),checkAuth(Role.BUYER),vendorController.applyAsSeller)
+router.post("/apply",checkAuth(Role.BUYER),validateRequest(applyAsSellerZodSchema),vendorController.applyAsSeller)
+router.get("/balance",checkAuth(Role.SELLER),vendorController.getMyBalance)
 
 
 export const vendorRoutes=router

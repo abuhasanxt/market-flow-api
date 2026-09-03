@@ -51,8 +51,25 @@ if (user.role===Role.ADMIN) {
   return vendor;
 }
 
-
+const getMyBalance=async(userId:string)=>{
+  const vendor=await prisma.vendor.findUnique({
+    where:{
+      userId
+    },
+    select:{
+      id:true,
+      storeName:true,
+      balance:true
+    }
+  })
+if (!vendor) {
+    throw new AppError(status.NOT_FOUND, "Vendor not found");
+  }
+ 
+return vendor
+}
 
 export const vendorServices={
-    applyAsSeller
+    applyAsSeller,
+    getMyBalance
 }
