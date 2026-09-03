@@ -48,10 +48,29 @@ const getMyPayouts = catchAsync(
   },
 );
 
+const updateSubOrderStatus = catchAsync(
+  async (req: Request, res: Response) => {
+    const userId = req.user.userId;
+    const { subOrderId } = req.params;
+    const { status: subOrderStatus } = req.body;
+    const result = await vendorServices.updateSubOrderStatus(
+      userId,
+      subOrderId as string,
+      subOrderStatus,
+    );
 
+    sendResponse(res, {
+      success: true,
+      httpStatusCode: status.OK,
+      message: "SubOrder status updated successfully.",
+      data: result,
+    });
+  },
+);
 
 export const vendorController={
     applyAsSeller,
     getMyBalance,
-    getMyPayouts
+    getMyPayouts,
+    updateSubOrderStatus
 }

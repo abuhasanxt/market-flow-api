@@ -3,7 +3,7 @@ import { checkAuth } from "../../middleware/checkAuth"
 import { Role } from "../../../generated/prisma/enums"
 import { vendorController } from "./vendor.controller"
 import { validateRequest } from "../../middleware/valideRequest"
-import { applyAsSellerZodSchema } from "./vendor.validation"
+import { applyAsSellerZodSchema, updateSubOrderStatusSchema } from "./vendor.validation"
 
 
 const router=express.Router()
@@ -15,6 +15,10 @@ router.get(
   checkAuth(Role.SELLER),
   vendorController.getMyPayouts,
 );
-
+router.patch(
+  "/sub-orders/:subOrderId/status",
+  checkAuth(Role.SELLER),validateRequest(updateSubOrderStatusSchema),
+  vendorController.updateSubOrderStatus,
+);
 
 export const vendorRoutes=router
