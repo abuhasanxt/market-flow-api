@@ -1,0 +1,28 @@
+import { Request, Response } from "express";
+import { catchAsync } from "../../shared/catchAsync";
+import { sendResponse } from "../../shared/sendResponse";
+import status from "http-status";
+import { reviewService } from "./reviews.service";
+
+
+const createReview = catchAsync(
+  async (req: Request, res: Response) => {
+    const buyerId = req.user.userId;
+
+    const result = await reviewService.createReview(
+      buyerId,
+      req.body,
+    );
+
+    sendResponse(res, {
+      success: true,
+      httpStatusCode: status.CREATED,
+      message: "Review created successfully.",
+      data: result,
+    });
+  },
+);
+
+export const reviewController = {
+  createReview,
+};

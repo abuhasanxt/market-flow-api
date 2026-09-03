@@ -6,6 +6,7 @@ import { categoriesRoutes } from "../module/categories/categories.route"
 import { productRoutes } from "../module/products/product.route"
 import { cartRoutes } from "../module/cart/cart.route"
 import { orderRoutes } from "../module/orders/order.route"
+import { reviewRoutes } from "../module/reviews/reviews.route"
 
 const router=express.Router()
 router.use("/categories",categoriesRoutes)
@@ -15,5 +16,5 @@ router.use("/admin",adminRoutes)
 router.use("/products",productRoutes)
 router.use("/cart",cartRoutes)
 router.use("/orders",orderRoutes)
-
+router.use("/reviews", reviewRoutes);
 export const IndexRoute=router
