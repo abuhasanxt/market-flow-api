@@ -12,12 +12,7 @@ const createReview = async (
     comment?: string;
   },
 ) => {
-  const {
-    productId,
-    subOrderId,
-    rating,
-    comment,
-  } = data;
+  const { productId, subOrderId, rating, comment } = data;
 
   //  Check product
   const product = await prisma.product.findUnique({
@@ -27,10 +22,7 @@ const createReview = async (
   });
 
   if (!product) {
-    throw new AppError(
-      status.NOT_FOUND,
-      "Product not found",
-    );
+    throw new AppError(status.NOT_FOUND, "Product not found");
   }
 
   //  Check SubOrder
@@ -44,10 +36,7 @@ const createReview = async (
   });
 
   if (!subOrder) {
-    throw new AppError(
-      status.NOT_FOUND,
-      "SubOrder not found",
-    );
+    throw new AppError(status.NOT_FOUND, "SubOrder not found");
   }
 
   //  Check SubOrder is DELIVERED
@@ -58,7 +47,7 @@ const createReview = async (
     );
   }
 
-  // 4. Verify product was purchased in this SubOrder
+  //  Verify product was purchased in this SubOrder
   const purchasedProduct = subOrder.items.some(
     (item) => item.productId === productId,
   );
@@ -85,40 +74,60 @@ const createReview = async (
     );
   }
 
-  //  Create review
-  const review = await prisma.review.create({
-    data: {
-      buyerId,
-      productId,
-      subOrderId,
-      rating,
-      comment,
-    },
+  //  Create review+ update product rating
+  const result = await prisma.$transaction(async (tx) => {
+    const review = await tx.review.create({
+      data: {
+        buyerId,
+        productId,
+        subOrderId,
+        rating,
+        comment,
+      },
+    });
+    const newRatingCount = product.ratingCount + 1;
+    const newRatingAvg =
+      (product.ratingAvg * product.ratingCount + rating) / newRatingCount;
+
+    const updatedProduct = await tx.product.update({
+      where: {
+        id: productId,
+      },
+      data: {
+        ratingCount: {
+          increment: 1,
+        },
+        ratingAvg: newRatingAvg,
+      },
+    });
+    return {
+      review,
+      product: updatedProduct,
+    };
   });
 
-  return review;
+  return result;
 };
 
-const getProductIdByReview=async(productId:string)=>{
-  const review=await prisma.review.findMany({
-    where:{
-      productId
+const getProductIdByReview = async (productId: string) => {
+  const review = await prisma.review.findMany({
+    where: {
+      productId,
     },
-    select:{
-      buyer:{
-        select:{
-          name:true,
-          email:true
-        }
+    select: {
+      buyer: {
+        select: {
+          name: true,
+          email: true,
+        },
       },
-      comment:true,
-      rating:true
+      comment: true,
+      rating: true,
     },
-    
-  })
-  return review
-}
+  });
+  return review;
+};
 export const reviewService = {
   createReview,
-  getProductIdByReview
+  getProductIdByReview,
 };
