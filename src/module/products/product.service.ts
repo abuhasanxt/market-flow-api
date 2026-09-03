@@ -334,13 +334,22 @@ const deleteProduct=async(userId:string,id:string)=>{
     );
   }
 //  delete only owner's product
-  const result=await prisma.product.delete({
+  await prisma.product.delete({
     where:{
        id:existingProduct.id
     }
   })
 
-  return result
+  // Delete product image from Cloudinary
+  if (existingProduct.imageUrl) {
+    try {
+      await deleteFileFromCloudinary(existingProduct.imageUrl);
+    } catch (error) {
+      console.error("Failed to delete product image from Cloudinary:", error);
+    }
+  }
+
+  return { message: "Product deleted successfully" };
 }
 export const productServices = {
   createProduct,
