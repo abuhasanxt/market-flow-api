@@ -14,6 +14,7 @@ model Product {
 
   cartItems CartItem[]
   orderItems OrderItem[]
+  reviews Review[]
 
   vendor   Vendor   @relation(fields: [vendorId], references: [id])
   category Category @relation(fields: [categoryId], references: [id])

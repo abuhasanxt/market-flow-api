@@ -1,0 +1,22 @@
+model Review {
+  id        String @id @default(uuid())
+  productId String
+  buyerId   String
+  subOrderId String
+
+  rating  Int
+  comment String?
+
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  buyer    User     @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  subOrder SubOrder @relation(fields: [subOrderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+  @@index([buyerId])
+  @@index([subOrderId])
+  @@unique([buyerId, productId])
+  @@map("reviews")
+}
