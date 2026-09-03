@@ -14,7 +14,7 @@ router.post(
   
   productController.createProduct,
 );
-router.patch("/:id",checkAuth(Role.SELLER),
+router.patch("/:id",checkAuth(Role.SELLER),multerUpload.single("imageUrl"),
   validateRequest(updateProductZodSchema),productController.updateProduct)
 
 router.delete("/:id",checkAuth(Role.SELLER),productController.deleteProduct)

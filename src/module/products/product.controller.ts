@@ -69,10 +69,14 @@ const getMyProduct= catchAsync(async (req: Request, res: Response) => {
 const updateProduct= catchAsync(async (req: Request, res: Response) => {
   const userId=req.user.userId
   const {id}=req.params
+  const payload={
+    ...req.body,
+    imageUrl:req.file?.path
+  }
   const result = await productServices.updateProduct(
     userId,
     id as string,
-    req.body
+    payload
   );
 
   sendResponse(res, {

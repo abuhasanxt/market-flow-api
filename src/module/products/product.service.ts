@@ -3,6 +3,7 @@ import status from "http-status";
 import AppError from "../../errorHelpers/AppError";
 import { prisma } from "../../lib/prisma";
 import { ProductData, ProductQuery, ProductUpdate } from "./product.interface";
+import { deleteFileFromCloudinary } from "../../config/cloudinary";
 
 const createProduct = async (
   userId: string,
@@ -278,6 +279,11 @@ const updateProduct = async (
     );
   }
 
+  // Check whether new image is uploaded
+  const isNewImageUploaded =
+    payload.imageUrl !== undefined &&
+    payload.imageUrl !== existingProduct.imageUrl;
+
   //  Update only owner's product
   const result = await prisma.product.update({
     where: {
@@ -285,6 +291,16 @@ const updateProduct = async (
     },
     data: payload,
   });
+
+
+  // Delete old image from Cloudinary
+  if (isNewImageUploaded && existingProduct.imageUrl) {
+    try {
+      await deleteFileFromCloudinary(existingProduct.imageUrl);
+    } catch (error) {
+      console.error("Old image deletion failed:", error);
+    }
+  }
 
   return result;
 };
