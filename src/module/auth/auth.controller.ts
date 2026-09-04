@@ -12,7 +12,7 @@ const registerBuyer = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     success: true,
     httpStatusCode: status.CREATED,
-    message: "Buyer Registration successfully",
+    message: "Registration successful. Please check your email for the OTP and verify your email.",
     data: result
   });
 });

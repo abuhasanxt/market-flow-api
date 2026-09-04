@@ -86,7 +86,7 @@ const loginUser = async (payload: UserLogin) => {
   });
 
   if (!user) {
-    throw new AppError(status.NOT_FOUND, "User Not FOund");
+    throw new AppError(status.NOT_FOUND, "We couldn't find an account with this email. Please sign up first.");
   }
 
   const isPasswordMatched = await bcrypt.compare(password, user.passwordHash);

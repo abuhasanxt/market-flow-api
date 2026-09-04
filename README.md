@@ -1,5 +1,5 @@
 # MarketFlow API
-
+`https://market-flow-pi.vercel.app`
 MarketFlow is a multi-vendor marketplace backend where buyers can purchase products from multiple vendors, while vendors can manage products, orders, payouts, and reviews.
 
 ## API Endpoints
@@ -60,10 +60,10 @@ MarketFlow is a multi-vendor marketplace backend where buyers can purchase produ
 | ----------------- | ------ | ---------------------- |
 | Create Product    | POST   | `/products`            |
 | Get All Products  | GET    | `/products`            |
-| Get Product by ID | GET    | `/products/:productId` |
+| Get Product by ID | GET    | `/products/:id` |
 | Get My Products   | GET    | `/products/me`         |
-| Update Product    | PATCH  | `/products/:productId` |
-| Delete Product    | DELETE | `/products/:productId` |
+| Update Product    | PATCH  | `/products/:id` |
+| Delete Product    | DELETE | `/products/:id` |
 
 ---
 
@@ -73,8 +73,8 @@ MarketFlow is a multi-vendor marketplace backend where buyers can purchase produ
 | ---------------- | ------ | ----------------- |
 | Add to Cart      | POST   | `/cart/items`     |
 | Get Cart         | GET    | `/cart`           |
-| Update Cart Item | PATCH  | `/cart/items/:id` |
-| Delete Cart Item | DELETE | `/cart/items/:id` |
+| Update Cart Item | PATCH  | `/cart/items/:productId` |
+| Delete Cart Item | DELETE | `/cart/items/:productId` |
 | Clear Cart       | DELETE | `/cart`           |
 
 ---
@@ -86,8 +86,8 @@ MarketFlow is a multi-vendor marketplace backend where buyers can purchase produ
 | Create Order + Pay Now   | POST   | `/orders/checkout`        |
 | Get My Orders            | GET    | `/orders`                 |
 | Get Order by ID          | GET    | `/orders/:id`             |
-| Create Order + Pay Later | POST   | `/product-with-pay-later` |
-| Initiate Payment         | POST   | `/initiate-payment/:id`   |
+| Create Order + Pay Later | POST   | `/orders/product-with-pay-later` |
+| Initiate Payment         | POST   | `/initiate-payment/:orderId`   |
 
 ---
 
